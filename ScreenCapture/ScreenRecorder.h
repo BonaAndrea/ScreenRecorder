@@ -12,6 +12,8 @@
 #include <thread>
 #include <mutex>
 #include <iomanip>
+#include <Windows.h>
+#include <WinUser.h>
 
 
 #define __STDC_CONSTANT_MACROS

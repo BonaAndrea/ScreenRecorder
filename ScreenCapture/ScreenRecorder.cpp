@@ -255,7 +255,7 @@ int ScreenRecorder::initOutputFile() {
 
     /*===========================================================================*/
     this->generateVideoStream();
-    //this->generateAudioStream();
+    this->generateAudioStream();
 
     //create an empty video file
     if (!(outAVFormatContext->flags & AVFMT_NOFILE)) {
@@ -534,18 +534,20 @@ void ScreenRecorder::captureAudio() {
         exit(1);
     }
 
-    while (true) {
-    //while(inAudioCodecContext->frame_number < 30){
-       /* if (pauseCapture) {
+    //while (true) {
+    while(inAudioCodecContext->frame_number < 30){
+       if (pauseCapture) {
             cout << "Pause audio" << endl;
         }
+       std::unique_lock<std::mutex> ul(mu);
+
         cv.wait(ul, [this]() { return !pauseCapture; });
         if (stopCapture) {
             break;
         }
 
         ul.unlock();
-        */
+        
         if (av_read_frame(inAudioFormatContext, inPacket) >= 0 && inPacket->stream_index == audioStreamIndx) {
             //decode audio routing
             av_packet_rescale_ts(outPacket, inAudioFormatContext->streams[audioStreamIndx]->time_base, inAudioCodecContext->time_base);
@@ -616,6 +618,7 @@ void ScreenRecorder::captureAudio() {
 
                         write_lock.lock();
 
+                        cout << outAVFormatContext << " " << outPacket << endl;
                         if (av_write_frame(outAVFormatContext, outPacket) != 0)
                         {
                             cerr << "Error in writing audio frame" << endl;
@@ -716,12 +719,13 @@ int ScreenRecorder::captureVideoFrames() {
     //while (true) {
     while (pAVCodecContext->frame_number < 30) {
 
-        /*if (pauseCapture) {
+        //if (GetAsyncKeyState(VK_CONTROL)) pauseCapture = !pauseCapture;
+        if (pauseCapture) {
             cout << "Pause" << endl;
             outFile << "///////////////////   Pause  ///////////////////" << endl;
             cout << "outVideoCodecContext->time_base: " << outVideoCodecContext->time_base.num << ", " << outVideoCodecContext->time_base.den << endl;
         }
-        std::unique_lock<std::mutex> ul();
+        std::unique_lock<std::mutex> ul(mu);
 
         cv.wait(ul, [this]() { return !pauseCapture; });   //pause capture (not busy waiting)
         if (endPause) {
@@ -732,9 +736,9 @@ int ScreenRecorder::captureVideoFrames() {
             break;
 
         ul.unlock();
-        */
+        
         if (av_read_frame(pAVFormatContext, pAVPacket) >= 0 && pAVPacket->stream_index == VideoStreamIndx) {
-            //av_packet_rescale_ts(pAVPacket, pAVFormatContext->streams[VideoStreamIndx]->time_base, pAVCodecContext->time_base);
+            av_packet_rescale_ts(pAVPacket, pAVFormatContext->streams[VideoStreamIndx]->time_base, pAVCodecContext->time_base);
             //value = avcodec_decode_video2(pAVCodecContext, pAVFrame, &frameFinished, pAVPacket);
             value = avcodec_send_packet(pAVCodecContext, pAVPacket);
             if (value < 0) {
