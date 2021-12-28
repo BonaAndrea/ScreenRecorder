@@ -9,8 +9,8 @@ int main()
 	ScreenRecorder screen_record;
 
 	screen_record.openVideoDevice();
-	screen_record.initOutputFile();
 	//screen_record.openAudioDevice();
+	screen_record.initOutputFile();
 	screen_record.captureVideoFrames();
 	//screen_record.captureAudio();
 
