@@ -1,6 +1,6 @@
 #ifndef SCREENRECORDER_H
 #define SCREENRECORDER_H
-
+#define AUDIO 1
 #include "ffmpeg.h"
 #include <iostream>
 #include <cstdio>
@@ -35,7 +35,7 @@ extern "C"
 #include "libavformat/avio.h"
 
 	// libav resample
-
+#include "libavutil/avutil.h"
 #include "libavutil/opt.h"
 #include "libavutil/common.h"
 #include "libavutil/channel_layout.h"
@@ -97,9 +97,13 @@ private:
 	std::condition_variable cv;
 	const char* dev_name;
 	const char* output_file;
-
+	
 	double video_pts;
-
+	int magicNumber = 30;
+	int cropX = 40;
+	int cropY = 40;
+	int cropH = 700;
+	int cropW = 900;
 	int out_size;
 	int codec_id;
 	int value;
@@ -137,7 +141,8 @@ public:
 	int initConvertedSamples(uint8_t*** converted_input_samples, AVCodecContext* output_codec_context, int frame_size);
 	void captureAudio();
 	int captureVideoFrames();
-	void get_packet_defaults(AVPacket* pkt);
+	void CreateThreads();
+	AVFrame* crop_frame(const AVFrame* in, int width, int height, int x, int y);
 	//int start();
 	//int stop();
 	//int initVideoThreads();
