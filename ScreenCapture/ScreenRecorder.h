@@ -99,11 +99,11 @@ private:
 	const char* output_file;
 	
 	double video_pts;
-	int magicNumber = 30;
-	int cropX = 40;
-	int cropY = 40;
-	int cropH = 700;
-	int cropW = 900;
+	int magicNumber = 3000;
+	int cropX = 0;
+	int cropY = 0;
+	int cropH = 1080;
+	int cropW = 1920;
 	int out_size;
 	int codec_id;
 	int value;
