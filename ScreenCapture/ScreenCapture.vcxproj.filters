@@ -38,4 +38,7 @@
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="Buttons.qrc" />
+  </ItemGroup>
 </Project>

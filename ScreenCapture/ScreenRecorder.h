@@ -143,6 +143,7 @@ public:
 	int captureVideoFrames();
 	void CreateThreads();
 	AVFrame* crop_frame(const AVFrame* in, int width, int height, int x, int y);
+	static void SetUpScreenRecorder();
 	//int start();
 	//int stop();
 	//int initVideoThreads();

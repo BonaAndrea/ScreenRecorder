@@ -6,9 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>517</width>
-    <height>441</height>
+    <width>579</width>
+    <height>55</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>579</width>
+    <height>55</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>579</width>
+    <height>55</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>QtWidgetsClass</string>
@@ -16,38 +28,131 @@
   <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
-     <x>220</x>
-     <y>330</y>
-     <width>101</width>
-     <height>24</height>
+     <x>540</x>
+     <y>10</y>
+     <width>31</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">image: url(:/buttons/rec-icon-png-23.jpg);</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_2">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>31</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">image: url(:/buttons/crop.png);</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_3">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>10</y>
+     <width>111</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>Start Recording</string>
+    <string>Set entire screen</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="comboBox">
+   <property name="geometry">
+    <rect>
+     <x>170</x>
+     <y>10</y>
+     <width>211</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>Gdigrab</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>screen-capture-recorder</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QPushButton" name="pushButton_4">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>500</x>
+     <y>10</y>
+     <width>31</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">image: url(:/buttons/stop.png);</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_5">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>460</x>
+     <y>10</y>
+     <width>31</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">image: url(:/buttons/playpause.png);</string>
+   </property>
+   <property name="text">
+    <string/>
    </property>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="Buttons.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>pushButton</sender>
    <signal>clicked()</signal>
    <receiver>QtWidgetsClass</receiver>
-   <slot>CreateThreads()</slot>
+   <slot>on_RECButton_clicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>273</x>
-     <y>339</y>
+     <x>563</x>
+     <y>27</y>
     </hint>
     <hint type="destinationlabel">
-     <x>279</x>
-     <y>226</y>
+     <x>405</x>
+     <y>52</y>
     </hint>
    </hints>
   </connection>
  </connections>
  <slots>
   <slot>CreateThreads()</slot>
+  <slot>on_RECButton_clicked()</slot>
  </slots>
 </ui>

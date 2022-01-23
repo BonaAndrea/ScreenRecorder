@@ -1,4 +1,4 @@
-#include "ScreenRecorder.h"
+﻿#include "ScreenRecorder.h"
 #include <cassert>
 
 
@@ -752,7 +752,7 @@ int ScreenRecorder::captureVideoFrames() {
     }
 
     SwsContext* swsCtx_;
-    SwsContext* swsCtx_Cropped;
+
     if (!(swsCtx_ = sws_alloc_context()))
     {
         cout << "\nError nell'allocazione del SwsContext";
@@ -775,17 +775,7 @@ int ScreenRecorder::captureVideoFrames() {
         outVideoCodecContext->pix_fmt,
         SWS_BILINEAR, NULL, NULL, NULL);
 
-    swsCtx_Cropped = swsCtx_ = sws_getCachedContext(swsCtx_,
-        pAVCodecContext->width,
-        pAVCodecContext->height,
-        pAVCodecContext->pix_fmt,
-        //1920-cropW,
-        //1080-cropH,
-        1920,
-        1080,
-        outVideoCodecContext->pix_fmt,
-        SWS_BICUBLIN, NULL, NULL, NULL);
-    
+
 
     if (avcodec_open2(pAVCodecContext, pAVCodec, &options) < 0) {
         cerr << "Could not open codec" << endl;
@@ -798,7 +788,7 @@ int ScreenRecorder::captureVideoFrames() {
 
     time_t startTime;
     time(&startTime);
-    
+
     //cout << "Framerate is: " << outAVFormatContext. << endl;//av_dict_get, "framerate", NULL, AV_DICT_IGNORE_SUFFIX)->value << endl;
 
 
@@ -812,7 +802,7 @@ int ScreenRecorder::captureVideoFrames() {
             cout << "outVideoCodecContext->time_base: " << outVideoCodecContext->time_base.num << ", " << outVideoCodecContext->time_base.den << endl;
         }
         std::unique_lock<std::mutex> ul(mu);
-        
+
         cv.wait(ul, [this]() { return !pauseCapture; });   //pause capture (not busy waiting)
         if (endPause) {
             endPause = false;
@@ -848,7 +838,7 @@ int ScreenRecorder::captureVideoFrames() {
                 exit(1);
             }
 
-            value = sws_scale(swsCtx_Cropped, pAVFrame->data, pAVFrame->linesize, 0, pAVFrame->height, outFrame->data, outFrame->linesize);
+            value = sws_scale(swsCtx_, pAVFrame->data, pAVFrame->linesize, 0, pAVFrame->height, outFrame->data, outFrame->linesize);
 
 
             if (value < 0) {
@@ -862,17 +852,17 @@ int ScreenRecorder::captureVideoFrames() {
             outPacket = av_packet_alloc();
             outPacket->data = nullptr;
             outPacket->size = 0;
-            
+
 
 
             //if (outAVFormatContext->streams[outVideoStreamIndex]->start_time <= 0) {
               //  outAVFormatContext->streams[outVideoStreamIndex]->start_time = pAVFrame->pts;
-            cout << "Width: " << outVideoCodecContext->width << ", height: " << outVideoCodecContext->height << endl;
+            //cout << "Width: " << outVideoCodecContext->width << ", height: " << outVideoCodecContext->height << endl;
             outFrame->width = outVideoCodecContext->width;
             outFrame->height = outVideoCodecContext->height;
             outFrame->format = outVideoCodecContext->pix_fmt;
-            cout << "Width: " << outFrame->width << ", height: " << outFrame->height << endl;
-           
+            //cout << "Width: " << outFrame->width << ", height: " << outFrame->height << endl;
+
             value = avcodec_send_frame(outVideoCodecContext, outFrame);
             if (value < 0)
             {
@@ -913,53 +903,88 @@ int ScreenRecorder::captureVideoFrames() {
                 if (outPacket->dts != AV_NOPTS_VALUE) {
                     outPacket->dts = av_rescale_q(outPacket->dts, outVideoCodecContext->time_base, videoSt->time_base);
                 }
+
+
+
+                outFile << "outPacket->duration: " << outPacket->duration << ", " << "pAVPacket->duration: " << pAVPacket->duration << endl;
+                outFile << "outPacket->pts: " << outPacket->pts << ", " << "pAVPacket->pts: " << pAVPacket->pts << endl;
+                outFile << "outPacket.dts: " << outPacket->dts << ", " << "pAVPacket->dts: " << pAVPacket->dts << endl;
+                time_t timer;
+                double seconds;
+
+                mu.lock();
+                if (!activeMenu) {
+                    time(&timer);
+                    seconds = difftime(timer, startTime);
+                    int h = (int)(seconds / 3600);
+                    int m = (int)(seconds / 60) % 60;
+                    int s = (int)(seconds) % 60;
+
+                    std::cout << std::flush << "\r" << std::setw(2) << std::setfill('0') << h << ':'
+                        << std::setw(2) << std::setfill('0') << m << ':'
+                        << std::setw(2) << std::setfill('0') << s << std::flush;
+                }
+                mu.unlock();
+
+                write_lock.lock();
+                if (av_write_frame(outAVFormatContext, outPacket) != 0) {
+                    cerr << "Error in writing video frame" << endl;
+                }
+                write_lock.unlock();
+                av_packet_free(&outPacket);
             }
-
-
-            outFile << "outPacket->duration: " << outPacket->duration << ", " << "pAVPacket->duration: " << pAVPacket->duration << endl;
-            outFile << "outPacket->pts: " << outPacket->pts << ", " << "pAVPacket->pts: " << pAVPacket->pts << endl;
-            outFile << "outPacket.dts: " << outPacket->dts << ", " << "pAVPacket->dts: " << pAVPacket->dts << endl;
-            time_t timer;
-            double seconds;
-
-            mu.lock();
-            if (!activeMenu) {
-                time(&timer);
-                seconds = difftime(timer, startTime);
-                int h = (int)(seconds / 3600);
-                int m = (int)(seconds / 60) % 60;
-                int s = (int)(seconds) % 60;
-
-                std::cout << std::flush << "\r" << std::setw(2) << std::setfill('0') << h << ':'
-                    << std::setw(2) << std::setfill('0') << m << ':'
-                    << std::setw(2) << std::setfill('0') << s << std::flush;
-            }
-            mu.unlock();
-
-            write_lock.lock();
-            if (av_write_frame(outAVFormatContext, outPacket) != 0) {
-                cerr << "Error in writing video frame" << endl;
-            }
-            write_lock.unlock();
             av_packet_free(&outPacket);
+            av_packet_free(&pAVPacket);
+            pAVPacket = av_packet_alloc();
+            if (!pAVPacket)
+                exit(1);
+
+            av_frame_free(&pAVFrame);
+            pAVFrame = av_frame_alloc();
+            if (!pAVFrame) // Verifichiamo che l'operazione svolta da "av_frame_alloc()" abbia avuto successo
+            {
+                cout << "\nUnable to release the avframe resources";
+                exit(1);
+            }
+
+            av_frame_free(&outFrame);
+            outFrame = av_frame_alloc();
+            if (!outFrame)
+            {
+                cout << "\nUnable to release the avframe resources for outframe";
+                exit(1);
+            }
+            value = av_image_fill_arrays(outFrame->data, outFrame->linesize, videoOutBuff, AV_PIX_FMT_YUV420P, outVideoCodecContext->width, outVideoCodecContext->height, 1);
+            if (value < 0) // Verifico che non ci siano errori
+            {
+                cout << "\nError in filling image array";
+                exit(value);
+            }
         }
 
-        else if (value < 0)
-        {
-            cout << "\nError sending a frame for encoding. ERROR CODE: " << value;
-            continue;
-            //exit(1);
-        }
     }
-    value = av_write_trailer(outAVFormatContext);
-    av_packet_free(&outPacket);
-    //av_free_packet(pAVPacket);  //avoid memory saturation
-    av_packet_free(&pAVPacket);
 
     stopCapture = true;
 
+    av_packet_free(&outPacket);
+
+    value = av_write_trailer(outAVFormatContext);
+    /*
+     * Scrive il trailer dello stream in un file multimediale di output e
+     * libera i dati privati ​​del file. Se non ci sono stati errori, ritorna 0.
+     */
+    if (value < 0)
+    {
+        cout << "\nError in writing av trailer";
+        exit(1);
+    }
 
     outFile.close();
+
+    av_packet_free(&pAVPacket);
+    sws_freeContext(swsCtx_);
+    av_frame_free(&pAVFrame);
+    av_frame_free(&outFrame);
 
     av_free(videoOutBuff);
 
@@ -1014,5 +1039,13 @@ AVFrame* ScreenRecorder::crop_frame(const AVFrame* in, int width, int height, in
 
     if (f == nullptr) cout << "frame croppato nullo dioc" << endl;
     return f;
+}
+
+void ScreenRecorder::SetUpScreenRecorder() {
+    ScreenRecorder screen_record;
+    screen_record.openVideoDevice();
+    screen_record.openAudioDevice();
+    screen_record.initOutputFile();
+    screen_record.CreateThreads();
 }
 
