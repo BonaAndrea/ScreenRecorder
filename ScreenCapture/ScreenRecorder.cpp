@@ -11,6 +11,12 @@ ScreenRecorder::ScreenRecorder() : pauseCapture(false), stopCapture(false), star
 
 }
 
+ScreenRecorder::ScreenRecorder(const ScreenRecorder& p1) : pauseCapture(p1.pauseCapture), stopCapture(p1.stopCapture), started(p1.started), activeMenu(p1.activeMenu)
+{
+    
+}
+
+
 ScreenRecorder::~ScreenRecorder() {
 
     if (started) {
@@ -1058,11 +1064,26 @@ AVFrame* ScreenRecorder::crop_frame(const AVFrame* in, int width, int height, in
     return f;
 }
 
-void ScreenRecorder::SetUpScreenRecorder() {
-    ScreenRecorder screen_record;
+void ScreenRecorder::SetUpScreenRecorder(ScreenRecorder screen_record) {
+    //screen_record.InnerSetup(screen_record);
+    //thread t1(&ScreenRecorder::InnerSetup, this);
+}
+
+void ScreenRecorder::StopRecording(ScreenRecorder screen_record) {
+    screen_record.stopCapture = true;
+}
+
+void ScreenRecorder::InnerSetup(ScreenRecorder screen_record) {
+    //ScreenRecorder screen_record;
     screen_record.openVideoDevice();
     screen_record.openAudioDevice();
     screen_record.initOutputFile();
+    //screen_record.CreateThreads();
     screen_record.CreateThreads();
+}
+
+void ScreenRecorder::PauseRecording(ScreenRecorder screen_record)
+{
+    screen_record.pauseCapture = !screen_record.pauseCapture;
 }
 

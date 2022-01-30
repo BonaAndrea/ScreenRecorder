@@ -1,6 +1,7 @@
 #ifndef SCREENRECORDER_H
 #define SCREENRECORDER_H
-#define AUDIO 1
+#define AUDIO 0
+#define QT 1
 #include "ffmpeg.h"
 #include <iostream>
 #include <cstdio>
@@ -128,6 +129,7 @@ private:
 public:
 
 	ScreenRecorder();
+	ScreenRecorder(const ScreenRecorder& p1);
 	~ScreenRecorder();
 
 	/* function to initiate communication with display library */
@@ -143,7 +145,11 @@ public:
 	int captureVideoFrames();
 	void CreateThreads();
 	AVFrame* crop_frame(const AVFrame* in, int width, int height, int x, int y);
-	static void SetUpScreenRecorder();
+	void SetUpScreenRecorder(ScreenRecorder screen_record);
+	void StopRecording(ScreenRecorder screen_record);
+	void InnerSetup(ScreenRecorder screen_record);
+	void PauseRecording(ScreenRecorder screen_record);
+	
 	//int start();
 	//int stop();
 	//int initVideoThreads();

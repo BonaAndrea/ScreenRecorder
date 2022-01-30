@@ -62,7 +62,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib\</AdditionalLibraryDirectories>
@@ -99,15 +99,18 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="QtWidgetsClass.cpp" />
     <ClCompile Include="ScreenRecorder.cpp" />
+    <ClCompile Include="ScreenResizeFrame.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ffmpeg.h" />
+    <QtMoc Include="ScreenResizeFrame.h" />
     <QtMoc Include="QtWidgetsClass.h" />
     <ClInclude Include="ScreenRecorder.h" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="Buttons.qrc" />
     <QtUic Include="QtWidgetsClass.ui" />
+    <QtUic Include="ScreenResizeFrame.ui" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
