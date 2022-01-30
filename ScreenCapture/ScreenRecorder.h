@@ -13,8 +13,10 @@
 #include <thread>
 #include <mutex>
 #include <iomanip>
+#if WIN32
 #include <Windows.h>
 #include <WinUser.h>
+#endif
 
 
 #define __STDC_CONSTANT_MACROS
