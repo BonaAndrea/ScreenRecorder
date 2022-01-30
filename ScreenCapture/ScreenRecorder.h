@@ -16,6 +16,8 @@
 #if WIN32
 #include <Windows.h>
 #include <WinUser.h>
+#elif linux
+#include <condition_variable>
 #endif
 
 
@@ -30,7 +32,6 @@ extern "C"
 #include "libavdevice/avdevice.h"
 
 #include "libavfilter/avfilter.h"
-#include "libavfilter/avfiltergraph.h"
 #include "libavfilter/buffersink.h"
 #include "libavfilter/buffersrc.h"
 
