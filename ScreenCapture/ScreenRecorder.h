@@ -129,6 +129,7 @@ private:
 public:
 
 	ScreenRecorder();
+	ScreenRecorder(std::string RecPath);
 	ScreenRecorder(const ScreenRecorder& p1);
 	~ScreenRecorder();
 
@@ -144,19 +145,15 @@ public:
 	void captureAudio();
 	int captureVideoFrames();
 	void CreateThreads();
-	AVFrame* crop_frame(const AVFrame* in, int width, int height, int x, int y);
-	void SetUpScreenRecorder(ScreenRecorder screen_record);
-	void StopRecording(ScreenRecorder screen_record);
-	void InnerSetup(ScreenRecorder screen_record);
-	void PauseRecording(ScreenRecorder screen_record);
-	
-	//int start();
-	//int stop();
-	//int initVideoThreads();
-	//void demuxVideoStream(AVCodecContext* codecContext, AVFormatContext* formatContext, int streamIndex);
-	//void rescaleVideoStream(AVCodecContext* inCodecContext, AVCodecContext* outCodecContext);
-	//void encodeVideoStream(AVCodecContext* codecContext);
-
+	void SetUpScreenRecorder();
+	void StopRecording();
+	void InnerSetup();
+	void PauseRecording();
+#if WIN32
+	std::string RecordingPath = "..\\media\\output.mp4";
+#elif
+	std::string RecordingPath = "../media//output.mp4";
+#endif
 };
 
 #endif

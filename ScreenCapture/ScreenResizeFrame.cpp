@@ -1,19 +1,25 @@
 #include "ScreenResizeFrame.h"
-#include <QHBoxLayout>
-#include <QLabel>
+#include <QtWidgets/qframe.h>
+#include <QVBoxLayout>
 
 
 ScreenResizeFrame::ScreenResizeFrame(QWidget *parent)
 	: QWidget(parent)
 {
+	//setAttribute(Qt::WA_TranslucentBackground);
+	//setWindowFlags(Qt::FramelessWindowHint);
 	ui.setupUi(this);
 	
-	QHBoxLayout* box = new QHBoxLayout(this);
-	QLabel* pLabel = new QLabel("Center panel", this);
-	box->addWidget(pLabel);
-	this->setStyleSheet("background-color: rgb(85, 100, 100)");
 }
 
 ScreenResizeFrame::~ScreenResizeFrame()
 {
+}
+
+void ScreenResizeFrame::resizeEvent(QResizeEvent* event)
+{
+	QRect oldpos = ui.setSizeButton->geometry();
+    ui.setSizeButton->move(((size().width()/2)-(ui.setSizeButton->size().width()/2)), ((size().height()/2) - (ui.setSizeButton->size().height() / 2)));
+	
+    QWidget::resizeEvent(event);
 }

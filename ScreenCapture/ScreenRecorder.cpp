@@ -8,8 +8,13 @@ static int64_t last_pts = AV_NOPTS_VALUE;
 
 ScreenRecorder::ScreenRecorder() : pauseCapture(false), stopCapture(false), started(false), activeMenu(true) {
     avdevice_register_all();
-
 }
+
+ScreenRecorder::ScreenRecorder(std::string RecPath) : pauseCapture(false), stopCapture(false), started(false), activeMenu(true) {
+    avdevice_register_all();
+    RecordingPath = RecPath;
+}
+
 
 ScreenRecorder::ScreenRecorder(const ScreenRecorder& p1) : pauseCapture(p1.pauseCapture), stopCapture(p1.stopCapture), started(p1.started), activeMenu(p1.activeMenu)
 {
@@ -314,19 +319,19 @@ int ScreenRecorder::initOutputFile() {
     value = 0;
 
     outAVFormatContext = nullptr;
-    outputAVFormat = const_cast<AVOutputFormat*>(av_guess_format(nullptr, "output.mp4", nullptr));
+    outputAVFormat = const_cast<AVOutputFormat*>(av_guess_format(nullptr, RecordingPath.data(), nullptr));
     if (outputAVFormat == nullptr) {
         cerr << "Error in guessing the video format, try with correct format" << endl;
         exit(-5);
     }
 #if WIN32
-    avformat_alloc_output_context2(&outAVFormatContext, outputAVFormat, outputAVFormat->name, "..\\media\\output.mp4");
+    avformat_alloc_output_context2(&outAVFormatContext, outputAVFormat, outputAVFormat->name, RecordingPath.data());
     if (outAVFormatContext == nullptr) {
         cerr << "Error in allocating outAVFormatContext" << endl;
         exit(-4);
     }
 #elif linux
-    avformat_alloc_output_context2(&outAVFormatContext, outputAVFormat, outputAVFormat->name, ".//media//output.mp4");
+    avformat_alloc_output_context2(&outAVFormatContext, outputAVFormat, outputAVFormat->name, RecordingPath.data());
     if (outAVFormatContext == nullptr) {
         cerr << "Error in allocating outAVFormatContext" << endl;
         exit(-4);
@@ -342,14 +347,14 @@ int ScreenRecorder::initOutputFile() {
     //create an empty video file
 #if WIN32
     if (!(outAVFormatContext->flags & AVFMT_NOFILE)) {
-        if (avio_open2(&outAVFormatContext->pb, "..\\media\\output.mp4", AVIO_FLAG_WRITE, nullptr, nullptr) < 0) {
+        if (avio_open2(&outAVFormatContext->pb, RecordingPath.data(), AVIO_FLAG_WRITE, nullptr, nullptr) < 0) {
             cerr << "Error in creating the video file" << endl;
             exit(-10);
         }
     }
 #elif linux
     if (!(outAVFormatContext->flags & AVFMT_NOFILE)) {
-        if (avio_open2(&outAVFormatContext->pb, ".//media//output.mp4", AVIO_FLAG_WRITE, nullptr, nullptr) < 0) {
+        if (avio_open2(&outAVFormatContext->pb, RecordingPath.data(), AVIO_FLAG_WRITE, nullptr, nullptr) < 0) {
             cerr << "Error in creating the video file" << endl;
             exit(-10);
         }
@@ -1024,66 +1029,23 @@ void ScreenRecorder::CreateThreads() {
     t2.join();
 }
 
-AVFrame* ScreenRecorder::crop_frame(const AVFrame* in, int width, int height, int x, int y)
+void ScreenRecorder::SetUpScreenRecorder() {
+    InnerSetup();
+}
+
+void ScreenRecorder::StopRecording() {
+    stopCapture = true;
+}
+
+void ScreenRecorder::InnerSetup() {
+    openVideoDevice();
+    openAudioDevice();
+    initOutputFile();
+    CreateThreads();
+}
+
+void ScreenRecorder::PauseRecording()
 {
-    AVFilterContext* buffersink_ctx;
-    AVFilterContext* buffersrc_ctx;
-    AVFilterGraph* filter_graph = avfilter_graph_alloc();
-    AVFrame* f = av_frame_alloc();
-    AVFilterInOut* inputs = NULL, * outputs = NULL;
-    char args[512];
-    int ret;
-    snprintf(args, sizeof(args),
-        "buffer=video_size=%dx%d:pix_fmt=%d:time_base=1/1:pixel_aspect=0/1[in];"
-        "[in]crop=out_w=%d:out_h=%d:x=%d:y=%d[out];"
-        "[out]buffersink",
-        in->width, in->height, in->format,
-        width, height, x, y);
-
-    ret = avfilter_graph_parse2(filter_graph, args, &inputs, &outputs);
-    if (ret < 0) return NULL;
-    assert(inputs == NULL && outputs == NULL);
-    ret = avfilter_graph_config(filter_graph, NULL);
-    if (ret < 0) return NULL;
-
-    buffersrc_ctx = avfilter_graph_get_filter(filter_graph, "Parsed_buffer_0");
-    buffersink_ctx = avfilter_graph_get_filter(filter_graph, "Parsed_buffersink_2");
-    assert(buffersrc_ctx != NULL);
-    assert(buffersink_ctx != NULL);
-
-    av_frame_ref(f, in);
-    ret = av_buffersrc_add_frame(buffersrc_ctx, f);
-    if (ret < 0) return NULL;
-    ret = av_buffersink_get_frame(buffersink_ctx, f);
-    if (ret < 0) return NULL;
-
-    avfilter_graph_free(&filter_graph);
-
-
-    if (f == nullptr) cout << "frame croppato nullo dioc" << endl;
-    return f;
-}
-
-void ScreenRecorder::SetUpScreenRecorder(ScreenRecorder screen_record) {
-    //screen_record.InnerSetup(screen_record);
-    //thread t1(&ScreenRecorder::InnerSetup, this);
-}
-
-void ScreenRecorder::StopRecording(ScreenRecorder screen_record) {
-    screen_record.stopCapture = true;
-}
-
-void ScreenRecorder::InnerSetup(ScreenRecorder screen_record) {
-    //ScreenRecorder screen_record;
-    screen_record.openVideoDevice();
-    screen_record.openAudioDevice();
-    screen_record.initOutputFile();
-    //screen_record.CreateThreads();
-    screen_record.CreateThreads();
-}
-
-void ScreenRecorder::PauseRecording(ScreenRecorder screen_record)
-{
-    screen_record.pauseCapture = !screen_record.pauseCapture;
+    pauseCapture = pauseCapture;
 }
 

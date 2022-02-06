@@ -6,31 +6,85 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>398</width>
-    <height>298</height>
+    <width>460</width>
+    <height>322</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>ScreenResizeFrame</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">color: rgba(0, 0, 0, 50);</string>
+   <string notr="true"/>
   </property>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="setSizeButton">
    <property name="geometry">
     <rect>
-     <x>150</x>
-     <y>120</y>
-     <width>75</width>
+     <x>180</x>
+     <y>130</y>
+     <width>51</width>
      <height>24</height>
     </rect>
    </property>
    <property name="text">
-    <string>PushButton</string>
+    <string>Set Size</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="UL" native="true">
+   <property name="geometry">
+    <rect>
+     <x>-10</x>
+     <y>-10</y>
+     <width>16</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">image: url(:/buttons/rec-icon-png-23.jpg);</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="UR" native="true">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>-10</y>
+     <width>16</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">image: url(:/buttons/rec-icon-png-23.jpg);</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="DR" native="true">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>310</y>
+     <width>16</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">image: url(:/buttons/rec-icon-png-23.jpg);</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="DL" native="true">
+   <property name="geometry">
+    <rect>
+     <x>-10</x>
+     <y>310</y>
+     <width>16</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">image: url(:/buttons/rec-icon-png-23.jpg);</string>
    </property>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="Buttons.qrc"/>
+ </resources>
  <connections/>
 </ui>

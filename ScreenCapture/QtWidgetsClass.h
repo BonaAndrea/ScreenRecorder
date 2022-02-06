@@ -14,12 +14,13 @@ public slots:
 	void on_STOPButton_clicked();
 	void on_PAUSEButton_clicked();
 	void on_RESIZEButton_clicked();
+	void on_PATHButton_clicked();
 
 public:
 	QtWidgetsClass(QWidget *parent = Q_NULLPTR);
 	~QtWidgetsClass();
-	ScreenRecorder sc;
 
 private:
 	ScreenResizeFrame* scResFr;
+	ScreenRecorder* sc;
 };
