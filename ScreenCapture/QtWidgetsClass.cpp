@@ -53,7 +53,18 @@ void QtWidgetsClass::on_RESIZEButton_clicked() {
 }
 
 void QtWidgetsClass::on_PATHButton_clicked() {
-	sc->RecordingPath = QFileDialog::getSaveFileName(this, "Pick save location...", "C://output.mp4", ".mp4").toStdString();
+	QString path = QFileDialog::getSaveFileName(this, "Pick save location...", QString::fromStdString(sc->RecordingPath), ".mp4");
+	if(path.isEmpty()) {
+#if WIN32
+		sc->RecordingPath = "..\\media\\output.mp4";
+#elif
+		sc->RecordingPath = "../media//output.mp4";
+#endif
+	}
+	else {
+		sc->RecordingPath = path.toStdString();
+	}
+
 	this->pathText->setText(QString::fromStdString(sc->RecordingPath));
 }
 
