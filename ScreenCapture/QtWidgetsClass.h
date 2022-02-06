@@ -15,6 +15,7 @@ public slots:
 	void on_PAUSEButton_clicked();
 	void on_RESIZEButton_clicked();
 	void on_PATHButton_clicked();
+	void on_FULLSCREENButton_clicked();
 
 public:
 	QtWidgetsClass(QWidget *parent = Q_NULLPTR);

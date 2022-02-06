@@ -11,7 +11,10 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>ScreenResizeFrame</string>
+   <string>Set recording frame</string>
+  </property>
+  <property name="windowOpacity">
+   <double>0.500000000000000</double>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -29,62 +32,30 @@
     <string>Set Size</string>
    </property>
   </widget>
-  <widget class="QWidget" name="UL" native="true">
-   <property name="geometry">
-    <rect>
-     <x>-10</x>
-     <y>-10</y>
-     <width>16</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">image: url(:/buttons/rec-icon-png-23.jpg);</string>
-   </property>
-  </widget>
-  <widget class="QWidget" name="UR" native="true">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
-     <y>-10</y>
-     <width>16</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">image: url(:/buttons/rec-icon-png-23.jpg);</string>
-   </property>
-  </widget>
-  <widget class="QWidget" name="DR" native="true">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
-     <y>310</y>
-     <width>16</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">image: url(:/buttons/rec-icon-png-23.jpg);</string>
-   </property>
-  </widget>
-  <widget class="QWidget" name="DL" native="true">
-   <property name="geometry">
-    <rect>
-     <x>-10</x>
-     <y>310</y>
-     <width>16</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">image: url(:/buttons/rec-icon-png-23.jpg);</string>
-   </property>
-  </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
   <include location="Buttons.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>setSizeButton</sender>
+   <signal>clicked()</signal>
+   <receiver>ScreenResizeFrame</receiver>
+   <slot>on_SETSIZEButton_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>205</x>
+     <y>141</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>229</x>
+     <y>160</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>on_SETSIZEButton_clicked()</slot>
+ </slots>
 </ui>

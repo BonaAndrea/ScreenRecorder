@@ -2,6 +2,14 @@
 #include "ScreenRecorder.h"
 #include <QLabel>
 #include <QFileDialog>
+#if linux
+#include <X11/Xlib.h>
+#endif
+#if WIN32
+#include <Windows.h>
+#endif
+
+
 
 QtWidgetsClass::QtWidgetsClass(QWidget* parent)
 	: QWidget(parent)
@@ -22,6 +30,7 @@ void QtWidgetsClass::on_RECButton_clicked() {
 	stopButton->setEnabled(true);
 	std::thread t1(&ScreenRecorder::SetUpScreenRecorder, sc);
 	t1.detach();
+	this->showMinimized();
 }
 
 void QtWidgetsClass::on_STOPButton_clicked() {
@@ -39,16 +48,30 @@ void QtWidgetsClass::on_PAUSEButton_clicked() {
 }
 
 void QtWidgetsClass::on_RESIZEButton_clicked() {
-	scResFr = new ScreenResizeFrame();
+	scResFr = new ScreenResizeFrame(Q_NULLPTR, sc);
 	scResFr->show();
-	hide();
-
-	//scResFr->close();
 }
 
 void QtWidgetsClass::on_PATHButton_clicked() {
 	sc->RecordingPath = QFileDialog::getSaveFileName(this, "Pick save location...", "C://output.mp4", ".mp4").toStdString();
 	this->pathText->setText(QString::fromStdString(sc->RecordingPath));
 }
+
+void QtWidgetsClass::on_FULLSCREENButton_clicked()
+{
+	sc->cropX = 0;
+	sc->cropY = 0;
+#if linux
+	Display* disp = XOpenDisplay(NULL);
+	Screen* scrn = DefaultScreenOfDisplay(disp);
+	sc->cropH = scrn->height;
+	sc->cropW = scrn->width;
+#endif
+#if WIN32
+	sc->cropW = GetSystemMetrics(SM_CXSCREEN);
+	sc->cropH = GetSystemMetrics(SM_CYSCREEN);
+#endif
+}
+
 
 
