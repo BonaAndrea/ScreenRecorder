@@ -1,6 +1,5 @@
 #ifndef SCREENRECORDER_H
 #define SCREENRECORDER_H
-#define AUDIO 0
 #define QT 1
 #include "ffmpeg.h"
 #include <iostream>
@@ -103,7 +102,7 @@ private:
 	const char* output_file;
 	
 	double video_pts;
-	int magicNumber = 3000;
+	int maxFrameNumber = 500000000000000;
 
 	int out_size;
 	int codec_id;
@@ -153,6 +152,7 @@ public:
 	int cropY = 0;
 	int cropH = 1080;
 	int cropW = 1920;
+	bool recordAudio = true;
 #if WIN32
 	std::string RecordingPath = "..\\media\\output.mp4";
 #elif

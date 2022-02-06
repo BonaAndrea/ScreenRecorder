@@ -632,10 +632,10 @@ void ScreenRecorder::captureAudio() {
     }
 
     //while (true) {
-    while (pAVCodecContext->frame_number < magicNumber) {
+    while (pAVCodecContext->frame_number < maxFrameNumber) {
         if (pauseCapture) {
             cout << "Pause audio" << endl;
-            //avformat_close_input(&inAudioFormatContext); //serve per il sync dell'audio???
+            avformat_close_input(&inAudioFormatContext); //serve per il sync dell'audio???
         }
         std::unique_lock<std::mutex> ul(mu);
 
@@ -804,7 +804,6 @@ int ScreenRecorder::captureVideoFrames() {
         SWS_BILINEAR, NULL, NULL, NULL);
 
 
-
     if (avcodec_open2(pAVCodecContext, pAVCodec, &options) < 0) {
         cerr << "Could not open codec" << endl;
         exit(-1);
@@ -821,8 +820,7 @@ int ScreenRecorder::captureVideoFrames() {
 
 
     //while (true) {
-    while (pAVCodecContext->frame_number < magicNumber) {
-        cout << "prova " << pAVInputFormat->name << endl;
+    while (pAVCodecContext->frame_number < maxFrameNumber) {
         //if (GetAsyncKeyState(VK_CONTROL)) pauseCapture = !pauseCapture;
         if (pauseCapture) {
             cout << "Pause" << endl;
@@ -1022,10 +1020,10 @@ int ScreenRecorder::captureVideoFrames() {
 
 void ScreenRecorder::CreateThreads() {
     thread t2(&ScreenRecorder::captureVideoFrames, this);
-#if AUDIO
-    std::thread t1(&ScreenRecorder::captureAudio, this);
+    if (recordAudio){
+        std::thread t1(&ScreenRecorder::captureAudio, this);
     t1.join();
-#endif
+}
     t2.join();
 }
 
