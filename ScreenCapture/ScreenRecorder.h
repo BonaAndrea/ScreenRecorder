@@ -12,11 +12,11 @@
 #include <thread>
 #include <mutex>
 #include <iomanip>
+#include <condition_variable>
 #if WIN32
 #include <Windows.h>
 #include <WinUser.h>
 #elif linux
-#include <condition_variable>
 #endif
 
 
@@ -95,9 +95,7 @@ private:
 	AVAudioFifo* fifo;
 	AVStream* videoSt;
 	AVFrame* outAVFrame;
-	std::mutex mu;
-	std::mutex write_lock;
-	std::condition_variable cv;
+
 	const char* dev_name;
 	const char* output_file;
 	
@@ -142,6 +140,8 @@ public:
 	int add_samples_to_fifo(uint8_t** converted_input_samples, const int frame_size);
 	int initConvertedSamples(uint8_t*** converted_input_samples, AVCodecContext* output_codec_context, int frame_size);
 	void captureAudio();
+	//void captureAudio(std::unique_lock<std::mutex> ul);
+	//int captureVideoFrames(std::unique_lock<std::mutex> ul);
 	int captureVideoFrames();
 	void CreateThreads();
 	void SetUpScreenRecorder();
@@ -153,6 +153,9 @@ public:
 	int cropH = 1080;
 	int cropW = 1920;
 	bool recordAudio = true;
+	std::mutex mu;
+	std::mutex write_lock;
+	std::condition_variable cv;
 #if WIN32
 	std::string RecordingPath = "..\\media\\output.mp4";
 #elif

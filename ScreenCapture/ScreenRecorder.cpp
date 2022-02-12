@@ -341,9 +341,8 @@ int ScreenRecorder::initOutputFile() {
 
     /*===========================================================================*/
     this->generateVideoStream();
-#if AUDIO
+if(recordAudio)
     this->generateAudioStream();
-#endif 
     //create an empty video file
 #if WIN32
     if (!(outAVFormatContext->flags & AVFMT_NOFILE)) {
@@ -637,8 +636,9 @@ void ScreenRecorder::captureAudio() {
             cout << "Pause audio" << endl;
             avformat_close_input(&inAudioFormatContext); //serve per il sync dell'audio???
         }
-        std::unique_lock<std::mutex> ul(mu);
 
+        std::unique_lock<std::mutex> ul(mu);
+        
         cv.wait(ul, [this]() { return !pauseCapture; });
         if (stopCapture) {
             break;
@@ -1019,7 +1019,8 @@ int ScreenRecorder::captureVideoFrames() {
 }
 
 void ScreenRecorder::CreateThreads() {
-    thread t2(&ScreenRecorder::captureVideoFrames, this);
+    std::thread t2(&ScreenRecorder::captureVideoFrames, this);
+    //thread t2(&ScreenRecorder::captureVideoFrames, mu);
     if (recordAudio){
         std::thread t1(&ScreenRecorder::captureAudio, this);
     t1.join();
@@ -1044,6 +1045,7 @@ void ScreenRecorder::InnerSetup() {
 
 void ScreenRecorder::PauseRecording()
 {
-    pauseCapture = pauseCapture;
+    pauseCapture = !pauseCapture;
 }
+
 

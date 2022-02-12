@@ -34,6 +34,9 @@ void QtWidgetsClass::on_RECButton_clicked() {
 	pauseResumeButton->setEnabled(true);
 	stopButton->setEnabled(true);
 	sc->recordAudio = checkBox->isChecked();
+	checkBox->setEnabled(false);
+	sizeButton->setEnabled(false);
+	wholeScreenButton->setEnabled(false);
 	std::thread t1(&ScreenRecorder::SetUpScreenRecorder, sc);
 	t1.detach();
 	this->showMinimized();
@@ -44,14 +47,16 @@ void QtWidgetsClass::on_STOPButton_clicked() {
 	recButton->setEnabled(true);
 	pauseResumeButton->setEnabled(false);
 	stopButton->setEnabled(false);
+	checkBox->setEnabled(true);
+	sizeButton->setEnabled(true);
+	wholeScreenButton->setEnabled(true);
 }
 
 void QtWidgetsClass::on_PAUSEButton_clicked() {
 	sc->PauseRecording();
 	this->showMinimized();
 	recButton->setEnabled(false);
-	pauseResumeButton->setEnabled(true);
-	stopButton->setEnabled(true);
+	stopButton->setEnabled(!stopButton->isEnabled());
 }
 
 void QtWidgetsClass::on_RESIZEButton_clicked() {
