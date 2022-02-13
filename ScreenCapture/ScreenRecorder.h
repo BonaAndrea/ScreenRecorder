@@ -119,8 +119,13 @@ private:
 	bool stopCapture;
 	bool started;
 	bool activeMenu;
+	bool closedAudioRecording = false;
+	bool closedVideoRecording = false;
 	int width, height;
 	int w, h;
+#if linux
+	string url = "";
+#endif
 
 
 public:

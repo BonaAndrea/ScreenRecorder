@@ -151,9 +151,7 @@ int ScreenRecorder::openVideoDevice() {
     RegCloseKey(hKey);
 
 
-    //pAVInputFormat = av_find_input_format("gdigrab");
     pAVInputFormat = av_find_input_format("dshow");
-    //if (avformat_open_input(&pAVFormatContext, "desktop", pAVInputFormat, &options) != 0) {
     if (avformat_open_input(&pAVFormatContext, "video=screen-capture-recorder", pAVInputFormat, &options) != 0) {
         cerr << "Couldn't open input stream" << endl;
         exit(-1);
@@ -162,7 +160,7 @@ int ScreenRecorder::openVideoDevice() {
 #elif defined linux
 
     int offset_x = 0, offset_y = 0;
-    string url = ":0.0+" + to_string(offset_x) + "," + to_string(offset_y);  //custom string to set the start point of the screen section
+    url = ":0.0+" + to_string(offset_x) + "," + to_string(offset_y);  //custom string to set the start point of the screen section
     pAVInputFormat = const_cast<AVInputFormat*> (av_find_input_format("x11grab"));
     value = avformat_open_input(&pAVFormatContext, url.c_str(), pAVInputFormat, &options);
 
@@ -635,6 +633,7 @@ void ScreenRecorder::captureAudio() {
         if (pauseCapture) {
             cout << "Pause audio" << endl;
             avformat_close_input(&inAudioFormatContext); //serve per il sync dell'audio???
+            closedAudioRecording = true;
         }
 
         std::unique_lock<std::mutex> ul(mu);
@@ -643,8 +642,14 @@ void ScreenRecorder::captureAudio() {
         if (stopCapture) {
             break;
         }
-
-        //avformat_open_input(&inAudioFormatContext, "audio=Microphone Array (Realtek(R) Audio)", audioInputFormat, &audioOptions); //per il sync?
+        if (closedAudioRecording) {
+#if WIN32
+            avformat_open_input(&inAudioFormatContext, "audio=Microphone Array (Realtek(R) Audio)", audioInputFormat, &audioOptions); //per il sync?
+#elif linux
+            avformat_open_input(&inAudioFormatContext, "hw:0", audioInputFormat, &audioOptions);
+#endif
+            closedAudioRecording = false;
+        }
         ul.unlock();
         if (av_read_frame(inAudioFormatContext, inPacket) >= 0 && inPacket->stream_index == audioStreamIndx) {
             //decode audio routing
@@ -741,6 +746,10 @@ int ScreenRecorder::captureVideoFrames() {
     bool endPause = false;
     int numPause = 0;
     AVFrame* croppedFrame;
+#if linux
+    string screenRes;
+#endif
+
 
     ofstream outFile{ "..\\media\\log.txt", ios::out };
 
@@ -826,6 +835,8 @@ int ScreenRecorder::captureVideoFrames() {
             cout << "Pause" << endl;
             outFile << "///////////////////   Pause  ///////////////////" << endl;
             cout << "outVideoCodecContext->time_base: " << outVideoCodecContext->time_base.num << ", " << outVideoCodecContext->time_base.den << endl;
+            avformat_close_input(&pAVFormatContext);
+            closedVideoRecording = true;
         }
         std::unique_lock<std::mutex> ul(mu);
 
@@ -837,157 +848,164 @@ int ScreenRecorder::captureVideoFrames() {
         if (stopCapture)  //check if the capture has to stop
             break;
 
-        ul.unlock();
-
-        if (av_read_frame(pAVFormatContext, pAVPacket) >= 0 && pAVPacket->stream_index == VideoStreamIndx) {
-            av_packet_rescale_ts(pAVPacket, pAVFormatContext->streams[VideoStreamIndx]->time_base, pAVCodecContext->time_base);
-
-
-            value = avcodec_send_packet(pAVCodecContext, pAVPacket);
-            if (value < 0) {
-                cout << AVERROR(value);
-                cout << "Unable to decode video" << endl;
-            }
-
-            value = avcodec_receive_frame(pAVCodecContext, pAVFrame);
-            //pAVFrame = crop_frame(pAVFrame, cropW-cropX, cropH-cropY, cropX, cropY);
-            //pAVFrame = crop_frame(pAVFrame, cropX, cropY, cropW-cropX, cropH-cropY);
-            cout << "\nFrame: " << pAVCodecContext->frame_number << "\n";
-            if (value == AVERROR(EAGAIN) || value == AVERROR_EOF) {
-                cout << "\nOutput not available in this state.  Try to send new input. ";
-                //break;
-                //exit(1);
-            }
-            else if (value < 0)
-            {
-                cout << "\nError during decoding";
-                exit(1);
-            }
-
-            value = sws_scale(swsCtx_, pAVFrame->data, pAVFrame->linesize, 0, pAVFrame->height, outFrame->data, outFrame->linesize);
-
-
-            if (value < 0) {
-                cout << "\nProblem with sws_scale ";
-                //break;
-                exit(1);
-            }
-            //frame successfully decoded
-            //sws_scale(swsCtx_, pAVFrame->data, pAVFrame->linesize, 0, pAVCodecContext->height, outFrame->data, outFrame->linesize);
-            //av_init_packet(&outPacket);
-            outPacket = av_packet_alloc();
-            outPacket->data = nullptr;
-            outPacket->size = 0;
-
-
-
-            //if (outAVFormatContext->streams[outVideoStreamIndex]->start_time <= 0) {
-              //  outAVFormatContext->streams[outVideoStreamIndex]->start_time = pAVFrame->pts;
-            //cout << "Width: " << outVideoCodecContext->width << ", height: " << outVideoCodecContext->height << endl;
-            outFrame->width = outVideoCodecContext->width;
-            outFrame->height = outVideoCodecContext->height;
-            outFrame->format = outVideoCodecContext->pix_fmt;
-            //cout << "Width: " << outFrame->width << ", height: " << outFrame->height << endl;
-
-            value = avcodec_send_frame(outVideoCodecContext, outFrame);
-            if (value < 0)
-            {
-                cout << "\nError sending a frame for encoding. ERROR CODE: " << value;
-                continue;
-                //exit(1);
-            }
-            //disable warning on the console
-
-            //avcodec_encode_video2(outVideoCodecContext, outPacket, outFrame, &gotPicture);
-
-            //cout << "Write frame " << j++ << " (size = " << outPacket.size / 1000 << ")" << endl;
-            //cout << "(size = " << outPacket.size << ")" << endl;
-
-            //av_packet_rescale_ts(&outPacket, outVideoCodecContext->time_base, outAVFormatContext->streams[outVideoStreamIndex]->time_base);
-            //outPacket.stream_index = outVideoStreamIndex;
-
-            value = avcodec_receive_packet(outVideoCodecContext, outPacket); //Legge i dati codificati dall'encoder.
-            if (value == AVERROR(EAGAIN))
-            {
-                cout << "\nOutput not available in this state.  Try to send new input";
-                continue;
-                //exit(1);
-            }
-            else if (value < 0 && value != AVERROR_EOF)
-            {
-                //cout << "\nAVERROR_EOF: " << AVERROR_EOF;
-                //cout << "\nAVERROR(EAGAIN): " << AVERROR(EAGAIN);
-                cout << "\nError during encoding";
-                //continue;
-                exit(1);
-            }
-
-            if (value >= 0) {
-                if (outPacket->pts != AV_NOPTS_VALUE) {
-                    outPacket->pts = av_rescale_q(outPacket->pts, outVideoCodecContext->time_base, videoSt->time_base);
-                }
-                if (outPacket->dts != AV_NOPTS_VALUE) {
-                    outPacket->dts = av_rescale_q(outPacket->dts, outVideoCodecContext->time_base, videoSt->time_base);
-                }
-
-
-
-                outFile << "outPacket->duration: " << outPacket->duration << ", " << "pAVPacket->duration: " << pAVPacket->duration << endl;
-                outFile << "outPacket->pts: " << outPacket->pts << ", " << "pAVPacket->pts: " << pAVPacket->pts << endl;
-                outFile << "outPacket.dts: " << outPacket->dts << ", " << "pAVPacket->dts: " << pAVPacket->dts << endl;
-                time_t timer;
-                double seconds;
-
-                mu.lock();
-                if (!activeMenu) {
-                    time(&timer);
-                    seconds = difftime(timer, startTime);
-                    int h = (int)(seconds / 3600);
-                    int m = (int)(seconds / 60) % 60;
-                    int s = (int)(seconds) % 60;
-
-                    std::cout << std::flush << "\r" << std::setw(2) << std::setfill('0') << h << ':'
-                        << std::setw(2) << std::setfill('0') << m << ':'
-                        << std::setw(2) << std::setfill('0') << s << std::flush;
-                }
-                mu.unlock();
-
-                write_lock.lock();
-                if (av_write_frame(outAVFormatContext, outPacket) != 0) {
-                    cerr << "Error in writing video frame" << endl;
-                }
-                write_lock.unlock();
-                av_packet_free(&outPacket);
-            }
-            av_packet_free(&outPacket);
-            av_packet_free(&pAVPacket);
-            pAVPacket = av_packet_alloc();
-            if (!pAVPacket)
-                exit(1);
-
-            av_frame_free(&pAVFrame);
-            pAVFrame = av_frame_alloc();
-            if (!pAVFrame) // Verifichiamo che l'operazione svolta da "av_frame_alloc()" abbia avuto successo
-            {
-                cout << "\nUnable to release the avframe resources";
-                exit(1);
-            }
-
-            av_frame_free(&outFrame);
-            outFrame = av_frame_alloc();
-            if (!outFrame)
-            {
-                cout << "\nUnable to release the avframe resources for outframe";
-                exit(1);
-            }
-            value = av_image_fill_arrays(outFrame->data, outFrame->linesize, videoOutBuff, AV_PIX_FMT_YUV420P, outVideoCodecContext->width, outVideoCodecContext->height, 1);
-            if (value < 0) // Verifico che non ci siano errori
-            {
-                cout << "\nError in filling image array";
-                exit(value);
-            }
+        if (closedVideoRecording) {
+#if WIN32
+            avformat_open_input(&pAVFormatContext, "video=screen-capture-recorder", pAVInputFormat, &options);
+#elif linux
+            avformat_open_input(&pAVFormatContext, url.c_str(), pAVInputFormat, &options);
+#endif
+            closedVideoRecording = false;
         }
 
+        ul.unlock();
+
+        if (!pauseCapture&&av_read_frame(pAVFormatContext, pAVPacket) >= 0 && pAVPacket->stream_index == VideoStreamIndx) {
+            av_packet_rescale_ts(pAVPacket, pAVFormatContext->streams[VideoStreamIndx]->time_base, pAVCodecContext->time_base);
+
+                value = avcodec_send_packet(pAVCodecContext, pAVPacket);
+                if (value < 0) {
+                    cout << AVERROR(value);
+                    cout << "Unable to decode video" << endl;
+                }
+
+                value = avcodec_receive_frame(pAVCodecContext, pAVFrame);
+                //pAVFrame = crop_frame(pAVFrame, cropW-cropX, cropH-cropY, cropX, cropY);
+                //pAVFrame = crop_frame(pAVFrame, cropX, cropY, cropW-cropX, cropH-cropY);
+                cout << "\nFrame: " << pAVCodecContext->frame_number << "\n";
+                if (value == AVERROR(EAGAIN) || value == AVERROR_EOF) {
+                    cout << "\nOutput not available in this state.  Try to send new input. ";
+                    //break;
+                    //exit(1);
+                }
+                else if (value < 0)
+                {
+                    cout << "\nError during decoding";
+                    exit(1);
+                }
+
+                value = sws_scale(swsCtx_, pAVFrame->data, pAVFrame->linesize, 0, pAVFrame->height, outFrame->data, outFrame->linesize);
+
+
+                if (value < 0) {
+                    cout << "\nProblem with sws_scale ";
+                    //break;
+                    exit(1);
+                }
+                //frame successfully decoded
+                //sws_scale(swsCtx_, pAVFrame->data, pAVFrame->linesize, 0, pAVCodecContext->height, outFrame->data, outFrame->linesize);
+                //av_init_packet(&outPacket);
+                outPacket = av_packet_alloc();
+                outPacket->data = nullptr;
+                outPacket->size = 0;
+
+
+
+                //if (outAVFormatContext->streams[outVideoStreamIndex]->start_time <= 0) {
+                  //  outAVFormatContext->streams[outVideoStreamIndex]->start_time = pAVFrame->pts;
+                //cout << "Width: " << outVideoCodecContext->width << ", height: " << outVideoCodecContext->height << endl;
+                outFrame->width = outVideoCodecContext->width;
+                outFrame->height = outVideoCodecContext->height;
+                outFrame->format = outVideoCodecContext->pix_fmt;
+                //cout << "Width: " << outFrame->width << ", height: " << outFrame->height << endl;
+
+                value = avcodec_send_frame(outVideoCodecContext, outFrame);
+                if (value < 0)
+                {
+                    cout << "\nError sending a frame for encoding. ERROR CODE: " << value;
+                    continue;
+                    //exit(1);
+                }
+                //disable warning on the console
+
+                //avcodec_encode_video2(outVideoCodecContext, outPacket, outFrame, &gotPicture);
+
+                //cout << "Write frame " << j++ << " (size = " << outPacket.size / 1000 << ")" << endl;
+                //cout << "(size = " << outPacket.size << ")" << endl;
+
+                //av_packet_rescale_ts(&outPacket, outVideoCodecContext->time_base, outAVFormatContext->streams[outVideoStreamIndex]->time_base);
+                //outPacket.stream_index = outVideoStreamIndex;
+
+                value = avcodec_receive_packet(outVideoCodecContext, outPacket); //Legge i dati codificati dall'encoder.
+                if (value == AVERROR(EAGAIN))
+                {
+                    cout << "\nOutput not available in this state.  Try to send new input";
+                    continue;
+                    //exit(1);
+                }
+                else if (value < 0 && value != AVERROR_EOF)
+                {
+                    //cout << "\nAVERROR_EOF: " << AVERROR_EOF;
+                    //cout << "\nAVERROR(EAGAIN): " << AVERROR(EAGAIN);
+                    cout << "\nError during encoding";
+                    //continue;
+                    exit(1);
+                }
+
+                if (value >= 0) {
+                    if (outPacket->pts != AV_NOPTS_VALUE) {
+                        outPacket->pts = av_rescale_q(outPacket->pts, outVideoCodecContext->time_base, videoSt->time_base);
+                    }
+                    if (outPacket->dts != AV_NOPTS_VALUE) {
+                        outPacket->dts = av_rescale_q(outPacket->dts, outVideoCodecContext->time_base, videoSt->time_base);
+                    }
+
+
+
+                    outFile << "outPacket->duration: " << outPacket->duration << ", " << "pAVPacket->duration: " << pAVPacket->duration << endl;
+                    outFile << "outPacket->pts: " << outPacket->pts << ", " << "pAVPacket->pts: " << pAVPacket->pts << endl;
+                    outFile << "outPacket.dts: " << outPacket->dts << ", " << "pAVPacket->dts: " << pAVPacket->dts << endl;
+                    time_t timer;
+                    double seconds;
+
+                    mu.lock();
+                    if (!activeMenu) {
+                        time(&timer);
+                        seconds = difftime(timer, startTime);
+                        int h = (int)(seconds / 3600);
+                        int m = (int)(seconds / 60) % 60;
+                        int s = (int)(seconds) % 60;
+
+                        std::cout << std::flush << "\r" << std::setw(2) << std::setfill('0') << h << ':'
+                            << std::setw(2) << std::setfill('0') << m << ':'
+                            << std::setw(2) << std::setfill('0') << s << std::flush;
+                    }
+                    mu.unlock();
+
+                    write_lock.lock();
+                    if (av_write_frame(outAVFormatContext, outPacket) != 0) {
+                        cerr << "Error in writing video frame" << endl;
+                    }
+                    write_lock.unlock();
+                    av_packet_free(&outPacket);
+                }
+                av_packet_free(&outPacket);
+                av_packet_free(&pAVPacket);
+                pAVPacket = av_packet_alloc();
+                if (!pAVPacket)
+                    exit(1);
+
+                av_frame_free(&pAVFrame);
+                pAVFrame = av_frame_alloc();
+                if (!pAVFrame) // Verifichiamo che l'operazione svolta da "av_frame_alloc()" abbia avuto successo
+                {
+                    cout << "\nUnable to release the avframe resources";
+                    exit(1);
+                }
+
+                av_frame_free(&outFrame);
+                outFrame = av_frame_alloc();
+                if (!outFrame)
+                {
+                    cout << "\nUnable to release the avframe resources for outframe";
+                    exit(1);
+                }
+                value = av_image_fill_arrays(outFrame->data, outFrame->linesize, videoOutBuff, AV_PIX_FMT_YUV420P, outVideoCodecContext->width, outVideoCodecContext->height, 1);
+                if (value < 0) // Verifico che non ci siano errori
+                {
+                    cout << "\nError in filling image array";
+                    exit(value);
+                }
+            }
     }
 
     stopCapture = true;
@@ -1034,6 +1052,10 @@ void ScreenRecorder::SetUpScreenRecorder() {
 
 void ScreenRecorder::StopRecording() {
     stopCapture = true;
+    if (pauseCapture) {
+        pauseCapture = false;
+        cv.notify_all();
+    }
 }
 
 void ScreenRecorder::InnerSetup() {
@@ -1046,6 +1068,9 @@ void ScreenRecorder::InnerSetup() {
 void ScreenRecorder::PauseRecording()
 {
     pauseCapture = !pauseCapture;
+    if (!pauseCapture) {
+        cv.notify_all();
+    }
 }
 
 
