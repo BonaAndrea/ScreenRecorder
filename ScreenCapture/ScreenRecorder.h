@@ -115,7 +115,6 @@ private:
 	std::thread* demux;
 	std::thread* rescale;
 	std::thread* mux;
-	bool pauseCapture;
 	bool stopCapture;
 	bool started;
 	bool activeMenu;
@@ -124,7 +123,7 @@ private:
 	int width, height;
 	int w, h;
 #if linux
-	string url = "";
+	string url;
 #endif
 
 
@@ -158,6 +157,7 @@ public:
 	int cropH = 1080;
 	int cropW = 1920;
 	bool recordAudio = true;
+	bool pauseCapture;
 	std::mutex mu;
 	std::mutex write_lock;
 	std::condition_variable cv;

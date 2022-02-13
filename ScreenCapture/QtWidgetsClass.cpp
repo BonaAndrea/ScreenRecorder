@@ -54,7 +54,9 @@ void QtWidgetsClass::on_STOPButton_clicked() {
 
 void QtWidgetsClass::on_PAUSEButton_clicked() {
 	sc->PauseRecording();
-	this->showMinimized();
+	if (!sc->pauseCapture) {
+		this->showMinimized();
+	}
 	recButton->setEnabled(false);
 	stopButton->setEnabled(true);
 }

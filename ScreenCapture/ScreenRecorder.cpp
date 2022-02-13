@@ -13,6 +13,18 @@ ScreenRecorder::ScreenRecorder() : pauseCapture(false), stopCapture(false), star
 ScreenRecorder::ScreenRecorder(std::string RecPath) : pauseCapture(false), stopCapture(false), started(false), activeMenu(true) {
     avdevice_register_all();
     RecordingPath = RecPath;
+    cropX = 0;
+    cropY = 0;
+#if linux
+    Display* disp = XOpenDisplay(NULL);
+    Screen* scrn = DefaultScreenOfDisplay(disp);
+    cropH = scrn->height;
+    cropW = scrn->width;
+#endif
+#if WIN32
+    cropW = GetSystemMetrics(SM_CXSCREEN);
+    cropH = GetSystemMetrics(SM_CYSCREEN);
+#endif
 }
 
 
@@ -405,7 +417,7 @@ void ScreenRecorder::generateVideoStream() {
     outVideoCodecContext->global_quality = 500;
     outVideoCodecContext->max_b_frames = 2;
     outVideoCodecContext->time_base.num = 1;
-    outVideoCodecContext->time_base.den = 30;
+    outVideoCodecContext->time_base.den = 29;
     outVideoCodecContext->bit_rate_tolerance = 400000;
 
     if (outVideoCodecContext->codec_id == AV_CODEC_ID_H264) {
@@ -859,7 +871,7 @@ int ScreenRecorder::captureVideoFrames() {
 
         ul.unlock();
 
-        if (!pauseCapture&&av_read_frame(pAVFormatContext, pAVPacket) >= 0 && pAVPacket->stream_index == VideoStreamIndx) {
+        if (av_read_frame(pAVFormatContext, pAVPacket) >= 0 && pAVPacket->stream_index == VideoStreamIndx) {
             av_packet_rescale_ts(pAVPacket, pAVFormatContext->streams[VideoStreamIndx]->time_base, pAVCodecContext->time_base);
 
                 value = avcodec_send_packet(pAVCodecContext, pAVPacket);
@@ -869,13 +881,9 @@ int ScreenRecorder::captureVideoFrames() {
                 }
 
                 value = avcodec_receive_frame(pAVCodecContext, pAVFrame);
-                //pAVFrame = crop_frame(pAVFrame, cropW-cropX, cropH-cropY, cropX, cropY);
-                //pAVFrame = crop_frame(pAVFrame, cropX, cropY, cropW-cropX, cropH-cropY);
                 cout << "\nFrame: " << pAVCodecContext->frame_number << "\n";
                 if (value == AVERROR(EAGAIN) || value == AVERROR_EOF) {
                     cout << "\nOutput not available in this state.  Try to send new input. ";
-                    //break;
-                    //exit(1);
                 }
                 else if (value < 0)
                 {
@@ -888,12 +896,9 @@ int ScreenRecorder::captureVideoFrames() {
 
                 if (value < 0) {
                     cout << "\nProblem with sws_scale ";
-                    //break;
                     exit(1);
                 }
                 //frame successfully decoded
-                //sws_scale(swsCtx_, pAVFrame->data, pAVFrame->linesize, 0, pAVCodecContext->height, outFrame->data, outFrame->linesize);
-                //av_init_packet(&outPacket);
                 outPacket = av_packet_alloc();
                 outPacket->data = nullptr;
                 outPacket->size = 0;
