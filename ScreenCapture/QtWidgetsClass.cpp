@@ -7,6 +7,10 @@
 #include <string>
 #if linux
 #include <X11/Xlib.h>
+#include <QDesktopServices>
+#include <libgen.h>         // dirname
+#include <unistd.h>         // readlink
+#include <linux/limits.h>   // PATH_MAX
 #endif
 #if WIN32
 #include <Windows.h>
@@ -16,11 +20,24 @@
 
 
 
+
+
 QtWidgetsClass::QtWidgetsClass(QWidget* parent)
 	: QWidget(parent)
 {
 	setupUi(this);
 	sc = new ScreenRecorder();
+#if linux
+        char result[PATH_MAX];
+        ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+        char *path;
+        if (count != -1) {
+            path = dirname(result);
+        }
+        std::string pathstr=std::string(path);
+        pathstr.append("//output.mp4");
+        sc->RecordingPath = pathstr;
+#endif
 	this->pathText->setText(QString::fromStdString(sc->RecordingPath));
 }
 
@@ -37,6 +54,8 @@ void QtWidgetsClass::on_RECButton_clicked() {
 	checkBox->setEnabled(false);
 	sizeButton->setEnabled(false);
 	wholeScreenButton->setEnabled(false);
+	openPath->setEnabled(false);
+	pathButton->setEnabled(false);
 	std::thread t1(&ScreenRecorder::SetUpScreenRecorder, sc);
 	t1.detach();
 	this->showMinimized();
@@ -50,6 +69,8 @@ void QtWidgetsClass::on_STOPButton_clicked() {
 	checkBox->setEnabled(true);
 	sizeButton->setEnabled(true);
 	wholeScreenButton->setEnabled(true);
+	openPath->setEnabled(true);
+	pathButton->setEnabled(true);
 }
 
 void QtWidgetsClass::on_PAUSEButton_clicked() {
@@ -71,8 +92,6 @@ void QtWidgetsClass::on_PATHButton_clicked() {
 	if(path.isEmpty()) {
 #if WIN32
 		sc->RecordingPath = "..\\media\\output.mp4";
-#elif
-		sc->RecordingPath = "../media//output.mp4";
 #endif
 	}
 	else {
@@ -101,6 +120,7 @@ void QtWidgetsClass::on_FULLSCREENButton_clicked()
 
 void QtWidgetsClass::on_OPENPATHButton_clicked()
 {
+
 	std::string directory;
 	size_t last_slash_idx = sc->RecordingPath.rfind('\\');
 	if(last_slash_idx == std::string::npos) last_slash_idx = sc->RecordingPath.rfind('/');
@@ -109,7 +129,11 @@ void QtWidgetsClass::on_OPENPATHButton_clicked()
 	{
 		directory = sc->RecordingPath.substr(0, last_slash_idx);
 	}
+#if WIN32
 	ShellExecute(NULL, L"open", string_to_wstring(directory).c_str(), NULL, NULL, SW_NORMAL);
+#elif linux
+    QDesktopServices::openUrl(QUrl(QString::fromStdString(directory)));
+#endif
 }
 
 std::wstring QtWidgetsClass::string_to_wstring(const std::string& text) {

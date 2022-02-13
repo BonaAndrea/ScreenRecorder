@@ -1,5 +1,8 @@
 ﻿#include "ScreenRecorder.h"
 #include <cassert>
+#if linux
+#include <X11/Xlib.h>
+#endif
 
 
 
@@ -90,9 +93,18 @@ int ScreenRecorder::openVideoDevice() {
     pAVFormatContext = nullptr;
 
     pAVFormatContext = avformat_alloc_context();
-
-    string dimension = to_string(width) + "x" + to_string(height);
-    //av_dict_set(&options, "video_size", dimension.c_str(), 0);   //option to set the dimension of the screen section to record
+#if linux
+    if (cropW==0 || cropH ==0){
+        Display* disp = XOpenDisplay(0);
+        Screen* scrn = DefaultScreenOfDisplay(disp);
+        cropH = scrn->height;
+        cropW = scrn->width;
+    }
+    dimension = to_string(cropW) + "x" + to_string(cropH);
+#else
+std::string dimension = to_string(cropW) + "x" + to_string(cropH);
+#endif
+    av_dict_set(&options, "video_size", dimension.c_str(), 0);   //option to set the dimension of the screen section to record
     //av_dict_set(&options, "video_size", "1920x1080", 0);   //option to set the dimension of the screen section to record
 
     value = av_dict_set(&options, "probesize", "60M", 0);
@@ -172,7 +184,7 @@ int ScreenRecorder::openVideoDevice() {
 #elif defined linux
 
     int offset_x = 0, offset_y = 0;
-    url = ":0.0+" + to_string(offset_x) + "," + to_string(offset_y);  //custom string to set the start point of the screen section
+    url = ":0.0+" + to_string(cropX) + "," + to_string(cropY);  //custom string to set the start point of the screen section
     pAVInputFormat = const_cast<AVInputFormat*> (av_find_input_format("x11grab"));
     value = avformat_open_input(&pAVFormatContext, url.c_str(), pAVInputFormat, &options);
 
@@ -323,6 +335,7 @@ int ScreenRecorder::openAudioDevice() {
         cerr << "Error: unable to find audio stream index" << endl;
         exit(-2);
     }
+    return(0);
 }
 
 int ScreenRecorder::initOutputFile() {
@@ -864,6 +877,8 @@ int ScreenRecorder::captureVideoFrames() {
 #if WIN32
             avformat_open_input(&pAVFormatContext, "video=screen-capture-recorder", pAVInputFormat, &options);
 #elif linux
+            dimension = to_string(cropW) + "x" + to_string(cropH);
+            av_dict_set(&options, "video_size", dimension.c_str(), 0);   //option to set the dimension of the screen section to record
             avformat_open_input(&pAVFormatContext, url.c_str(), pAVInputFormat, &options);
 #endif
             closedVideoRecording = false;

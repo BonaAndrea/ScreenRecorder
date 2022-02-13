@@ -123,7 +123,8 @@ private:
 	int width, height;
 	int w, h;
 #if linux
-	string url;
+	std::string url;
+	std::string dimension;
 #endif
 
 
