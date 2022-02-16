@@ -2,6 +2,7 @@
 #include "ScreenRecorder.h"
 #include <QLabel>
 #include <QFileDialog>
+#include <QTimer>
 #include <stdlib.h>
 #include <algorithm>
 #include <string>
@@ -17,6 +18,7 @@
 #include <shellapi.h>
 #pragma comment(lib, "shell32")
 #endif
+#include <QMessageBox>
 
 
 
@@ -27,6 +29,7 @@ QtWidgetsClass::QtWidgetsClass(QWidget* parent)
 {
 	setupUi(this);
 	sc = new ScreenRecorder();
+	QTimer* timer = new QTimer(this);
 #if linux
         char result[PATH_MAX];
         ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
@@ -39,6 +42,11 @@ QtWidgetsClass::QtWidgetsClass(QWidget* parent)
         sc->RecordingPath = pathstr;
 #endif
 	this->pathText->setText(QString::fromStdString(sc->RecordingPath));
+
+
+	QObject::connect(timer, SIGNAL(timeout()), this, SLOT(createErrorMessage()));
+
+	timer->start(1000);
 }
 
 QtWidgetsClass::~QtWidgetsClass()
@@ -71,6 +79,8 @@ void QtWidgetsClass::on_STOPButton_clicked() {
 	wholeScreenButton->setEnabled(true);
 	openPath->setEnabled(true);
 	pathButton->setEnabled(true);
+	sc = new ScreenRecorder;
+	sc->RecordingPath = pathText->text().toStdString();
 }
 
 void QtWidgetsClass::on_PAUSEButton_clicked() {
@@ -140,6 +150,15 @@ std::wstring QtWidgetsClass::string_to_wstring(const std::string& text) {
 	return std::wstring(text.begin(), text.end());
 }
 
+void QtWidgetsClass::createErrorMessage() {
+
+	if (!sc->error_msg.empty()) {
+		this->showNormal();
+		QMessageBox messageBox;
+		messageBox.critical(0, "Error", QString::fromStdString(sc->error_msg));
+		exit(EXIT_FAILURE);
+	}
+}
 
 
 

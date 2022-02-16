@@ -153,15 +153,20 @@ public:
 	void StopRecording();
 	void InnerSetup();
 	void PauseRecording();
+	void CloseRecorder();
 	int cropX = 0;
 	int cropY = 0;
 	int cropH = 1080;
 	int cropW = 1920;
+	int ptsA;
+	int ptsV;
 	bool recordAudio = true;
 	bool pauseCapture;
 	std::mutex mu;
 	std::mutex write_lock;
 	std::condition_variable cv;
+	std::condition_variable cvw; 
+	std::string error_msg;
 #if WIN32
 	std::string RecordingPath = "..\\media\\output.mp4";
 #elif
