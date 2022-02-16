@@ -28,6 +28,7 @@ QtWidgetsClass::QtWidgetsClass(QWidget* parent)
 	: QWidget(parent)
 {
 	setupUi(this);
+	setWindowIcon(QIcon(":/buttons/unicorn.png"));
 	sc = new ScreenRecorder();
 	QTimer* timer = new QTimer(this);
 #if linux
@@ -56,6 +57,7 @@ QtWidgetsClass::~QtWidgetsClass()
 
 
 void QtWidgetsClass::on_RECButton_clicked() {
+	setWindowIcon(QIcon(":/buttons/rec-icon-png-23.jpg"));
 	recButton->setEnabled(false);
 	pauseResumeButton->setEnabled(true);
 	stopButton->setEnabled(true);
@@ -73,6 +75,7 @@ void QtWidgetsClass::on_RECButton_clicked() {
 
 void QtWidgetsClass::on_STOPButton_clicked() {
 	sc->StopRecording();
+	setWindowIcon(QIcon(":/buttons/unicorn.png"));
 	recButton->setEnabled(true);
 	pauseResumeButton->setEnabled(false);
 	stopButton->setEnabled(false);
@@ -90,6 +93,10 @@ void QtWidgetsClass::on_PAUSEButton_clicked() {
 	sc->PauseRecording();
 	if (!sc->pauseCapture) {
 		this->showMinimized();
+		setWindowIcon(QIcon(":/buttons/rec-icon-png-23.jpg"));
+	}
+	else {
+		setWindowIcon(QIcon(":/buttons/unicorn.png"));
 	}
 	recButton->setEnabled(false);
 	stopButton->setEnabled(true);

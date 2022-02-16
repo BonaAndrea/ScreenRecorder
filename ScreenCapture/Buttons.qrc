@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="buttons">
+    <file>unicorn.png</file>
     <file>playpause.png</file>
     <file>clipart1292051.png</file>
     <file>stop.png</file>
