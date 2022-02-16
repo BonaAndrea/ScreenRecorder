@@ -140,7 +140,7 @@ std::string dimension = to_string(cropW) + "x" + to_string(cropH);
 
     pAVInputFormat = av_find_input_format("dshow");
     if (avformat_open_input(&pAVFormatContext, "video=screen-capture-recorder", pAVInputFormat, &options) != 0) {
-        error_msg =  "Couldn't open input stream" << endl;
+        error_msg =  "Couldn't open input stream";
         exit(-1);
     }
 
