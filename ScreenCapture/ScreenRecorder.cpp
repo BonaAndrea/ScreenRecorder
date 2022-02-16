@@ -104,7 +104,7 @@ std::string dimension = to_string(cropW) + "x" + to_string(cropH);
             TEXT("SOFTWARE\\screen-capture-recorder\\"),
             0, NULL, 0,
             KEY_WRITE, NULL,
-            &hKey, &value) != ERROR_SUCCESS) cout << "errore registro" << endl;
+            &hKey, &value) != ERROR_SUCCESS) SetError("Errore nel settare la chiave di registro");
     RegSetValueEx(hKey, TEXT("start_x"), 0, REG_DWORD, (const BYTE*)&value, sizeof(value));
     RegCloseKey(hKey);
     _itoa_s(cropY, hexString, 16);
@@ -114,7 +114,7 @@ std::string dimension = to_string(cropW) + "x" + to_string(cropH);
             TEXT("SOFTWARE\\screen-capture-recorder\\"),
             0, NULL, 0,
             KEY_WRITE, NULL,
-            &hKey, &value) != ERROR_SUCCESS) cout << "errore registro" << endl;
+            &hKey, &value) != ERROR_SUCCESS) SetError("Errore nel settare la chiave di registro");
     RegSetValueEx(hKey, TEXT("start_y"), 0, REG_DWORD, (const BYTE*)&value, sizeof(value));
     RegCloseKey(hKey);
     _itoa_s(cropW, hexString, 16);
@@ -124,7 +124,7 @@ std::string dimension = to_string(cropW) + "x" + to_string(cropH);
             TEXT("SOFTWARE\\screen-capture-recorder\\"),
             0, NULL, 0,
             KEY_WRITE, NULL,
-            &hKey, &value) != ERROR_SUCCESS) cout << "errore registro" << endl;
+            &hKey, &value) != ERROR_SUCCESS) SetError("Errore nel settare la chiave di registro");
     RegSetValueEx(hKey, TEXT("capture_width"), 0, REG_DWORD, (const BYTE*)&value, sizeof(value));
     RegCloseKey(hKey);
     _itoa_s(cropH, hexString, 16);
@@ -134,7 +134,7 @@ std::string dimension = to_string(cropW) + "x" + to_string(cropH);
             TEXT("SOFTWARE\\screen-capture-recorder\\"),
             0, NULL, 0,
             KEY_WRITE, NULL,
-            &hKey, &value) != ERROR_SUCCESS) cout << "errore registro" << endl;
+            &hKey, &value) != ERROR_SUCCESS) SetError("Errore nel settare la chiave di registro");
     RegSetValueEx(hKey, TEXT("capture_height"), 0, REG_DWORD, (const BYTE*)&value, sizeof(value));
     RegCloseKey(hKey);
 
