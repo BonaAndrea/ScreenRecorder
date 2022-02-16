@@ -154,7 +154,6 @@ public:
 	void CreateThreads();
 	void SetUpScreenRecorder();
 	void StopRecording();
-	void InnerSetup();
 	void PauseRecording();
 	void CloseRecorder();
 	bool ShouldStopAudio();
