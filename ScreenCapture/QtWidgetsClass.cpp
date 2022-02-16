@@ -73,18 +73,6 @@ void QtWidgetsClass::on_RECButton_clicked() {
 
 void QtWidgetsClass::on_STOPButton_clicked() {
 	sc->StopRecording();
-	if (sc->recordAudio) {
-		sc->audioThread.join();
-		QMessageBox messageBox;
-		messageBox.information(this, "", "");
-		messageBox.showMinimized();
-		messageBox.close();
-	}
-	sc->videoThread.join();
-	QMessageBox messageBox;
-	messageBox.information(this, "", "");
-	messageBox.showMinimized();
-	messageBox.close();
 	recButton->setEnabled(true);
 	pauseResumeButton->setEnabled(false);
 	stopButton->setEnabled(false);
@@ -166,11 +154,11 @@ std::wstring QtWidgetsClass::string_to_wstring(const std::string& text) {
 }
 
 void QtWidgetsClass::createErrorMessage() {
-
-	if (!sc->error_msg.empty()) {
+	auto error_string = sc->GetErrorString();
+	if (!error_string.empty()) {
 		this->showNormal();
 		QMessageBox messageBox;
-		messageBox.critical(0, "Error", QString::fromStdString(sc->error_msg));
+		messageBox.critical(0, "Error", QString::fromStdString(error_string));
 		exit(EXIT_FAILURE);
 	}
 }

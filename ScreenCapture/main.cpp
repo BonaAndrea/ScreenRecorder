@@ -10,7 +10,6 @@ using namespace std;
 /* driver function to run the application */
 int main(int argc, char* argv[])
 {
-	//ScreenRecorder screen_record;
 
 #if QT
 	QApplication a(argc, argv);
@@ -18,7 +17,6 @@ int main(int argc, char* argv[])
 	w.setWindowTitle(QString("Vola mio mini recorder"));
 
 	w.show();
-	//std::thread tApp(&QApplication::exec, a);
 	a.exec();
 	
 #endif
@@ -30,7 +28,6 @@ int main(int argc, char* argv[])
 	screen_record.initOutputFile();
 	screen_record.CreateThreads();
 #endif
-	//cout << "\nprogram executed successfully\n";
 
 	return 0;
 }

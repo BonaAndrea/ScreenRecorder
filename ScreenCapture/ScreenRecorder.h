@@ -115,7 +115,8 @@ private:
 	std::thread* demux;
 	std::thread* rescale;
 	std::thread* mux;
-	bool stopCapture;
+	bool stopCaptureAudio = false;
+	bool stopCaptureVideo = false;
 	bool started;
 	bool activeMenu;
 	bool closedAudioRecording = false;
@@ -156,6 +157,12 @@ public:
 	void InnerSetup();
 	void PauseRecording();
 	void CloseRecorder();
+	bool ShouldStopAudio();
+	bool ShouldStopVideo();
+	void StopVideo();
+	void StopAudio();
+	void SetError(std::string error);
+	std::string GetErrorString();
 	int cropX = 0;
 	int cropY = 0;
 	int cropH = 1080;
@@ -166,6 +173,9 @@ public:
 	bool pauseCapture;
 	std::mutex mu;
 	std::mutex write_lock;
+	std::mutex stop_lockA;
+	std::mutex stop_lockV;
+	std::mutex error_lock;
 	std::condition_variable cv;
 	std::condition_variable cvw; 
 	std::string error_msg;

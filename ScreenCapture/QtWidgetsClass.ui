@@ -177,8 +177,7 @@
     </rect>
    </property>
    <property name="styleSheet">
-    <string notr="true">
-</string>
+    <string notr="true"/>
    </property>
    <property name="text">
     <string>Open folder</string>
@@ -279,6 +278,22 @@
     <hint type="sourcelabel">
      <x>325</x>
      <y>65</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>244</x>
+     <y>45</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>wholeScreenButton</sender>
+   <signal>clicked()</signal>
+   <receiver>QtWidgetsClass</receiver>
+   <slot>on_FULLSCREENButton_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>80</x>
+     <y>25</y>
     </hint>
     <hint type="destinationlabel">
      <x>244</x>
