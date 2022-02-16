@@ -51,6 +51,7 @@ QtWidgetsClass::QtWidgetsClass(QWidget* parent)
 
 QtWidgetsClass::~QtWidgetsClass()
 {
+	
 }
 
 
@@ -64,13 +65,26 @@ void QtWidgetsClass::on_RECButton_clicked() {
 	wholeScreenButton->setEnabled(false);
 	openPath->setEnabled(false);
 	pathButton->setEnabled(false);
-	std::thread t1(&ScreenRecorder::SetUpScreenRecorder, sc);
-	t1.detach();
+	sc->SetUpScreenRecorder();
+	//std::thread t1(&ScreenRecorder::SetUpScreenRecorder, sc);
+	//t1.detach();
 	this->showMinimized();
 }
 
 void QtWidgetsClass::on_STOPButton_clicked() {
 	sc->StopRecording();
+	if (sc->recordAudio) {
+		sc->audioThread.join();
+		QMessageBox messageBox;
+		messageBox.information(this, "", "");
+		messageBox.showMinimized();
+		messageBox.close();
+	}
+	sc->videoThread.join();
+	QMessageBox messageBox;
+	messageBox.information(this, "", "");
+	messageBox.showMinimized();
+	messageBox.close();
 	recButton->setEnabled(true);
 	pauseResumeButton->setEnabled(false);
 	stopButton->setEnabled(false);
@@ -79,8 +93,9 @@ void QtWidgetsClass::on_STOPButton_clicked() {
 	wholeScreenButton->setEnabled(true);
 	openPath->setEnabled(true);
 	pathButton->setEnabled(true);
-	sc = new ScreenRecorder;
-	sc->RecordingPath = pathText->text().toStdString();
+	delete sc;
+	sc = new ScreenRecorder(pathText->text().toStdString());
+	//sc->RecordingPath = pathText->text().toStdString();
 }
 
 void QtWidgetsClass::on_PAUSEButton_clicked() {

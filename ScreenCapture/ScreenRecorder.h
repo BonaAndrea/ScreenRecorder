@@ -122,6 +122,8 @@ private:
 	bool closedVideoRecording = false;
 	int width, height;
 	int w, h;
+	int64_t pts = 0;
+	
 #if linux
 	std::string url;
 	std::string dimension;
@@ -167,6 +169,8 @@ public:
 	std::condition_variable cv;
 	std::condition_variable cvw; 
 	std::string error_msg;
+	std::thread videoThread, audioThread;
+
 #if WIN32
 	std::string RecordingPath = "..\\media\\output.mp4";
 #elif

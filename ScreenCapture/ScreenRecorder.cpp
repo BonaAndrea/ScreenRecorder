@@ -7,13 +7,12 @@
 
 
 using namespace std;
-static int64_t last_pts = AV_NOPTS_VALUE;
 
-ScreenRecorder::ScreenRecorder() : pauseCapture(false), stopCapture(false), started(false), activeMenu(true) {
+ScreenRecorder::ScreenRecorder() : pauseCapture(false), stopCapture(false), started(false), activeMenu(true), pts(0) {
     avdevice_register_all();
 }
 
-ScreenRecorder::ScreenRecorder(std::string RecPath) : pauseCapture(false), stopCapture(false), started(false), activeMenu(true) {
+ScreenRecorder::ScreenRecorder(std::string RecPath) : pauseCapture(false), stopCapture(false), started(false), activeMenu(true), pts(0) {
     avdevice_register_all();
     RecordingPath = RecPath;
     cropX = 0;
@@ -561,7 +560,6 @@ int ScreenRecorder::initConvertedSamples(uint8_t*** converted_input_samples,
     return 0;
 }
 
-static int64_t pts = 0;
 void ScreenRecorder::captureAudio() {
     int ret;
     AVPacket* inPacket, * outPacket;
@@ -617,7 +615,7 @@ void ScreenRecorder::captureAudio() {
         exit(1);
     }
 
-    while (true&&!stopCapture) {
+    while (!stopCapture) {
     //while (pAVCodecContext->frame_number < maxFrameNumber) {
         if (pauseCapture) {
             cout << "Pause audio" ;
@@ -826,7 +824,7 @@ int ScreenRecorder::captureVideoFrames() {
     //cout << "Framerate is: " << outAVFormatContext. ;//av_dict_get, "framerate", NULL, AV_DICT_IGNORE_SUFFIX)->value ;
 
 
-    while (true&&!stopCapture) {
+    while (!stopCapture) {
     //while (pAVCodecContext->frame_number < maxFrameNumber) {
         //if (GetAsyncKeyState(VK_CONTROL)) pauseCapture = !pauseCapture;
         if (pauseCapture) {
@@ -1045,12 +1043,10 @@ int ScreenRecorder::captureVideoFrames() {
 
 void ScreenRecorder::CreateThreads() {
     //error_msg = "prova";
-    std::thread t2(&ScreenRecorder::captureVideoFrames, this);
-    if (recordAudio){
-        std::thread t1(&ScreenRecorder::captureAudio, this);
-    t1.join();
-}
-    t2.join();
+    videoThread = std::thread(&ScreenRecorder::captureVideoFrames, this);
+    if (recordAudio) {
+        audioThread = std::thread(&ScreenRecorder::captureAudio, this);
+    }
 }
 
 void ScreenRecorder::SetUpScreenRecorder() {
@@ -1061,8 +1057,8 @@ void ScreenRecorder::StopRecording() {
     stopCapture = true;
     if (pauseCapture) {
         pauseCapture = false;
-        cv.notify_all();
     }
+        cv.notify_all();
 }
 
 void ScreenRecorder::InnerSetup() {
@@ -1098,6 +1094,7 @@ void ScreenRecorder::CloseRecorder()
         exit(-1);
         //throw "Error: unable to close the file";
     }
+
     avformat_free_context(inAudioFormatContext);
     if (inAudioFormatContext == nullptr) {
         cout << "AudioFormat freed successfully" << endl;
@@ -1127,7 +1124,10 @@ void ScreenRecorder::CloseRecorder()
         error_msg =  "Error: unable to free VideoFormatContext";
         exit(-1);
     }
-        avio_closep(&outAVFormatContext->pb);
+    if (recordAudio && fifo){
+        av_audio_fifo_reset(fifo);
+        }
+    avio_closep(&outAVFormatContext->pb);
 }
 
 
