@@ -17,7 +17,7 @@ public slots:
 	void on_PATHButton_clicked();
 	void on_FULLSCREENButton_clicked();
 	void on_OPENPATHButton_clicked();
-	void createErrorMessage();
+	void CreateErrorMessage();
 public:
 	QtWidgetsClass(QWidget *parent = Q_NULLPTR);
 	~QtWidgetsClass();
@@ -25,6 +25,6 @@ public:
 private:
 	ScreenResizeFrame* scResFr;
 	ScreenRecorder* sc;
-	std::wstring string_to_wstring(const std::string& text);
+	std::wstring StringToWstring(const std::string& text);
 
 };

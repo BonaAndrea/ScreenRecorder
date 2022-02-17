@@ -50,7 +50,7 @@ QtWidgetsClass::QtWidgetsClass(QWidget* parent)
 	this->pathText->setText(QString::fromStdString(sc->RecordingPath));
 
 
-	QObject::connect(timer, SIGNAL(timeout()), this, SLOT(createErrorMessage()));
+	QObject::connect(timer, SIGNAL(timeout()), this, SLOT(CreateErrorMessage()));
 
 	timer->start(1000);
 }
@@ -192,7 +192,7 @@ void QtWidgetsClass::on_OPENPATHButton_clicked()
 	}
 	/*Apre la cartella di destinazione dell'output*/
 #if WIN32
-	ShellExecute(NULL, L"open", string_to_wstring(directory).c_str(), NULL, NULL, SW_NORMAL);
+	ShellExecute(NULL, L"open", StringToWstring(directory).c_str(), NULL, NULL, SW_NORMAL);
 #elif linux
     QDesktopServices::openUrl(QUrl(QString::fromStdString(directory)));
 #endif
@@ -200,13 +200,13 @@ void QtWidgetsClass::on_OPENPATHButton_clicked()
 
 
 /*Funzione di utility per ottenere una wstring a partire da una string*/
-std::wstring QtWidgetsClass::string_to_wstring(const std::string& text) {
+std::wstring QtWidgetsClass::StringToWstring(const std::string& text) {
 	return std::wstring(text.begin(), text.end());
 }
 
 
 /*Funzione che viene chiamata periodicamente e controlla la presenza di messaggi di errore*/
-void QtWidgetsClass::createErrorMessage() {
+void QtWidgetsClass::CreateErrorMessage() {
 	auto error_string = sc->GetErrorString();
 	if (!error_string.empty()) {
 		this->showNormal();

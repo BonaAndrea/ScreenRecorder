@@ -51,7 +51,7 @@ ScreenRecorder::~ScreenRecorder() {
 /*==================================== VIDEO ==============================*/
 
 /*Funzione che inizializza le strutture dati richieste e apre l'input video*/
-int ScreenRecorder::openVideoDevice() {
+int ScreenRecorder::OpenVideoDevice() {
     value = 0;
     options = nullptr;
     pAVFormatContext = nullptr;
@@ -103,49 +103,11 @@ std::string dimension = to_string(cropW) + "x" + to_string(cropH);
 Usando Screen-capture-recorder, come da indicazioni nella documentazione dello stesso,
 e' necessario settare delle chiavi di registro corrispondenti*/
 #ifdef _WIN32
-    HKEY hKey;
-    char hexString[20];
-    _itoa_s(cropX, hexString, 16);
-    DWORD value = strtoul(hexString, NULL, 16);
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\screen-capture-recorder\\"), 0, KEY_ALL_ACCESS, &hKey) != ERROR_SUCCESS)
-        if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-            TEXT("SOFTWARE\\screen-capture-recorder\\"),
-            0, NULL, 0,
-            KEY_WRITE, NULL,
-            &hKey, &value) != ERROR_SUCCESS) SetError("Errore nel settare la chiave di registro");
-    RegSetValueEx(hKey, TEXT("start_x"), 0, REG_DWORD, (const BYTE*)&value, sizeof(value));
-    RegCloseKey(hKey);
-    _itoa_s(cropY, hexString, 16);
-    value = strtoul(hexString, NULL, 16);
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\screen-capture-recorder\\"), 0, KEY_ALL_ACCESS, &hKey) != ERROR_SUCCESS)
-        if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-            TEXT("SOFTWARE\\screen-capture-recorder\\"),
-            0, NULL, 0,
-            KEY_WRITE, NULL,
-            &hKey, &value) != ERROR_SUCCESS) SetError("Errore nel settare la chiave di registro");
-    RegSetValueEx(hKey, TEXT("start_y"), 0, REG_DWORD, (const BYTE*)&value, sizeof(value));
-    RegCloseKey(hKey);
-    _itoa_s(cropW, hexString, 16);
-    value = strtoul(hexString, NULL, 16);
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\screen-capture-recorder\\"), 0, KEY_ALL_ACCESS, &hKey) != ERROR_SUCCESS)
-        if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-            TEXT("SOFTWARE\\screen-capture-recorder\\"),
-            0, NULL, 0,
-            KEY_WRITE, NULL,
-            &hKey, &value) != ERROR_SUCCESS) SetError("Errore nel settare la chiave di registro");
-    RegSetValueEx(hKey, TEXT("capture_width"), 0, REG_DWORD, (const BYTE*)&value, sizeof(value));
-    RegCloseKey(hKey);
-    _itoa_s(cropH, hexString, 16);
-    value = strtoul(hexString, NULL, 16);
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\screen-capture-recorder\\"), 0, KEY_ALL_ACCESS, &hKey) != ERROR_SUCCESS)
-        if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-            TEXT("SOFTWARE\\screen-capture-recorder\\"),
-            0, NULL, 0,
-            KEY_WRITE, NULL,
-            &hKey, &value) != ERROR_SUCCESS) SetError("Errore nel settare la chiave di registro");
-    RegSetValueEx(hKey, TEXT("capture_height"), 0, REG_DWORD, (const BYTE*)&value, sizeof(value));
-    RegCloseKey(hKey);
-
+    SetCaptureSystemKey(cropX, TEXT("start_x"));
+    SetCaptureSystemKey(cropY, TEXT("start_y"));
+    SetCaptureSystemKey(cropW, TEXT("capture_width"));
+    SetCaptureSystemKey(cropH, TEXT("capture_height"));
+   
     /*Apertura dello stream di input*/
     pAVInputFormat = av_find_input_format("dshow");
     if (avformat_open_input(&pAVFormatContext, "video=screen-capture-recorder", pAVInputFormat, &options) != 0) {
@@ -227,7 +189,7 @@ e' necessario settare delle chiavi di registro corrispondenti*/
 
 
 /*Funzione analoga a quella video che inizializza le strutture dati e apre l'input audio*/
-int ScreenRecorder::openAudioDevice() {
+int ScreenRecorder::OpenAudioDevice() {
     audioOptions = nullptr;
     inAudioFormatContext = nullptr;
 
@@ -286,7 +248,7 @@ int ScreenRecorder::openAudioDevice() {
 }
 
 /*Funzione per la creazione del file di output*/
-int ScreenRecorder::initOutputFile() {
+int ScreenRecorder::InitOutputFile() {
     value = 0;
 
     outAVFormatContext = nullptr;
@@ -307,9 +269,9 @@ int ScreenRecorder::initOutputFile() {
 
     /*===========================================================================*/
     /*Crea gli stream video e (se richiesto) audio*/
-    this->generateVideoStream();
+    GenerateVideoStream();
 if(recordAudio)
-    this->generateAudioStream();
+    GenerateAudioStream();
     /*Crea un file video vuoto*/
     if (!(outAVFormatContext->flags & AVFMT_NOFILE)) {
         if (avio_open2(&outAVFormatContext->pb, RecordingPath.data(), AVIO_FLAG_WRITE, nullptr, nullptr) < 0) {
@@ -337,7 +299,7 @@ if(recordAudio)
 /*===================================  VIDEO  ==================================*/
 
 /*genera lo stream video*/
-void ScreenRecorder::generateVideoStream() {
+void ScreenRecorder::GenerateVideoStream() {
 
     /*Salva in outVideoCodec il codec per il formato utilizzato, in questo caso MPEG4*/
     outVideoCodec = const_cast<AVCodec*>(avcodec_find_encoder(AV_CODEC_ID_MPEG4));  //AV_CODEC_ID_MPEG4
@@ -410,7 +372,7 @@ void ScreenRecorder::generateVideoStream() {
 
 /*Genera lo stream audio. Per la maggior parte sono funzioni analoghe e parallele
 a quelle dello stream video*/
-void ScreenRecorder::generateAudioStream() {
+void ScreenRecorder::GenerateAudioStream() {
     AVCodecParameters* params = inAudioFormatContext->streams[audioStreamIndx]->codecpar;
     inAudioCodec = const_cast<AVCodec*>(avcodec_find_decoder(params->codec_id));
     if (inAudioCodec == nullptr) {
@@ -499,7 +461,7 @@ void ScreenRecorder::generateAudioStream() {
 
 
 /*Inizializza la coda FIFO per i sample audio*/
-int ScreenRecorder::init_fifo()
+int ScreenRecorder::InitFifo()
 {
     /* Crea la coda FIFO per i sample audio basandosi sul codec audio. */
     if (!(fifo = av_audio_fifo_alloc(outAudioCodecContext->sample_fmt,
@@ -510,7 +472,7 @@ int ScreenRecorder::init_fifo()
     return 0;
 }
 
-int ScreenRecorder::add_samples_to_fifo(uint8_t** converted_input_samples, const int frame_size) {
+int ScreenRecorder::AddSamplesToFifo(uint8_t** converted_input_samples, const int frame_size) {
     int error;
     /*Espande la FIFO per consentire di tenere sia i vecchi 
     che i nuovi sample.*/
@@ -526,7 +488,7 @@ int ScreenRecorder::add_samples_to_fifo(uint8_t** converted_input_samples, const
     return 0;
 }
 
-int ScreenRecorder::initConvertedSamples(uint8_t*** converted_input_samples,
+int ScreenRecorder::InitConvertedSamples(uint8_t*** converted_input_samples,
     AVCodecContext* output_codec_context,
     int frame_size) {
     int error;
@@ -551,13 +513,13 @@ int ScreenRecorder::initConvertedSamples(uint8_t*** converted_input_samples,
 }
 
 /*Funzione per la cattura dell'audio*/
-void ScreenRecorder::captureAudio() {
+void ScreenRecorder::CaptureAudio() {
     int ret;
     AVPacket* inPacket, * outPacket;
     AVFrame* rawFrame, * scaledFrame;
     uint8_t** resampledData;
     /*inizializza la fifo*/
-    init_fifo();
+    InitFifo();
   
     /*Alloca un pacchetto*/
     inPacket = av_packet_alloc();
@@ -660,7 +622,7 @@ void ScreenRecorder::captureAudio() {
                 if (outAVFormatContext->streams[outAudioStreamIndex]->start_time <= 0) {
                     outAVFormatContext->streams[outAudioStreamIndex]->start_time = rawFrame->pts;
                 }
-                initConvertedSamples(&resampledData, outAudioCodecContext, rawFrame->nb_samples);
+                InitConvertedSamples(&resampledData, outAudioCodecContext, rawFrame->nb_samples);
 
                 swr_convert(resampleContext,
                     resampledData, rawFrame->nb_samples,
@@ -668,7 +630,7 @@ void ScreenRecorder::captureAudio() {
 
 
                 /*Aggiungiamo al buffer fifo dei sample audio di input convertiti*/
-                add_samples_to_fifo(resampledData, rawFrame->nb_samples);
+                AddSamplesToFifo(resampledData, rawFrame->nb_samples);
 
                 outPacket = av_packet_alloc();
                 outPacket->data = nullptr;
@@ -737,7 +699,7 @@ void ScreenRecorder::captureAudio() {
 }
 
 /*Funzione per la cattura del video*/
-int ScreenRecorder::captureVideoFrames() {
+int ScreenRecorder::CaptureVideoFrames() {
     int64_t pts = 0;
     int flag;
     int frameFinished = 0;
@@ -1020,17 +982,17 @@ int ScreenRecorder::captureVideoFrames() {
 
 /*Funzione che inizializza i thread per la registrazione video (e audio, se richiesta)*/
 void ScreenRecorder::CreateThreads() {
-    videoThread = std::thread(&ScreenRecorder::captureVideoFrames, this);
+    videoThread = std::thread(&ScreenRecorder::CaptureVideoFrames, this);
     if (recordAudio) {
-        audioThread = std::thread(&ScreenRecorder::captureAudio, this);
+        audioThread = std::thread(&ScreenRecorder::CaptureAudio, this);
     }
 }
 
 /*Funzione wrapper che chiama altre funzioni per il setup dello screen recorder*/
 void ScreenRecorder::SetUpScreenRecorder() {
-    openVideoDevice();
-    openAudioDevice();
-    initOutputFile();
+    OpenVideoDevice();
+    OpenAudioDevice();
+    InitOutputFile();
     CreateThreads();
 }
 
@@ -1163,3 +1125,17 @@ void ScreenRecorder::StopVideo()
     stopCaptureVideo = true;
 }
 
+void ScreenRecorder::SetCaptureSystemKey(int valueToSet, LPCWSTR keyToSet) {
+    HKEY hKey;
+    char hexString[20];
+    _itoa_s(valueToSet, hexString, 16);
+    DWORD value = strtoul(hexString, NULL, 16);
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\screen-capture-recorder\\"), 0, KEY_ALL_ACCESS, &hKey) != ERROR_SUCCESS)
+        if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+            TEXT("SOFTWARE\\screen-capture-recorder\\"),
+            0, NULL, 0,
+            KEY_WRITE, NULL,
+            &hKey, &value) != ERROR_SUCCESS) SetError("Errore nel settare la chiave di registro");
+    RegSetValueEx(hKey, keyToSet, 0, REG_DWORD, (const BYTE*)&value, sizeof(value));
+    RegCloseKey(hKey);
+}

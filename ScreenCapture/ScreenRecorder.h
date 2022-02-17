@@ -139,18 +139,16 @@ public:
 	~ScreenRecorder();
 
 	/* function to initiate communication with display library */
-	int openVideoDevice();
-	int openAudioDevice();
-	int initOutputFile();
-	void generateVideoStream();
-	void generateAudioStream();
-	int init_fifo();
-	int add_samples_to_fifo(uint8_t** converted_input_samples, const int frame_size);
-	int initConvertedSamples(uint8_t*** converted_input_samples, AVCodecContext* output_codec_context, int frame_size);
-	void captureAudio();
-	//void captureAudio(std::unique_lock<std::mutex> ul);
-	//int captureVideoFrames(std::unique_lock<std::mutex> ul);
-	int captureVideoFrames();
+	int OpenVideoDevice();
+	int OpenAudioDevice();
+	int InitOutputFile();
+	void GenerateVideoStream();
+	void GenerateAudioStream();
+	int InitFifo();
+	int AddSamplesToFifo(uint8_t** converted_input_samples, const int frame_size);
+	int InitConvertedSamples(uint8_t*** converted_input_samples, AVCodecContext* output_codec_context, int frame_size);
+	void CaptureAudio();
+	int CaptureVideoFrames();
 	void CreateThreads();
 	void SetUpScreenRecorder();
 	void StopRecording();
@@ -161,6 +159,7 @@ public:
 	void StopVideo();
 	void StopAudio();
 	void SetError(std::string error);
+	void SetCaptureSystemKey(int valueToSet, LPCWSTR keyToSet);
 	std::string GetErrorString();
 	int cropX = 0;
 	int cropY = 0;
