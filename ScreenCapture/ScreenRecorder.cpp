@@ -328,8 +328,8 @@ void ScreenRecorder::GenerateVideoStream() {
     outVideoCodecContext->codec_type = AVMEDIA_TYPE_VIDEO;
     outVideoCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;
     outVideoCodecContext->bit_rate = 10000000;
-    outVideoCodecContext->width = 1920; 
-    outVideoCodecContext->height = 1080; 
+    outVideoCodecContext->width = cropW; 
+    outVideoCodecContext->height = cropH; 
     outVideoCodecContext->gop_size = 10;
     outVideoCodecContext->global_quality = 500;
     outVideoCodecContext->max_b_frames = 2;
@@ -1125,6 +1125,7 @@ void ScreenRecorder::StopVideo()
     stopCaptureVideo = true;
 }
 
+#if WIN32
 void ScreenRecorder::SetCaptureSystemKey(int valueToSet, LPCWSTR keyToSet) {
     HKEY hKey;
     char hexString[20];
@@ -1139,3 +1140,4 @@ void ScreenRecorder::SetCaptureSystemKey(int valueToSet, LPCWSTR keyToSet) {
     RegSetValueEx(hKey, keyToSet, 0, REG_DWORD, (const BYTE*)&value, sizeof(value));
     RegCloseKey(hKey);
 }
+#endif

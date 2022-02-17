@@ -159,12 +159,11 @@ public:
 	void StopVideo();
 	void StopAudio();
 	void SetError(std::string error);
-	void SetCaptureSystemKey(int valueToSet, LPCWSTR keyToSet);
 	std::string GetErrorString();
 	int cropX = 0;
 	int cropY = 0;
-	int cropH = 1080;
-	int cropW = 1920;
+	int cropH ;
+	int cropW ;
 	int ptsA;
 	int ptsV;
 	bool recordAudio = true;
@@ -180,6 +179,7 @@ public:
 	std::thread videoThread, audioThread;
 
 #if WIN32
+	void SetCaptureSystemKey(int valueToSet, LPCWSTR keyToSet);
 	std::string RecordingPath = "..\\media\\output.mp4";
 #elif
 	std::string RecordingPath = "../media//output.mp4";
