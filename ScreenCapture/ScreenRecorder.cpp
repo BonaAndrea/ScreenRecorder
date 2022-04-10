@@ -4,7 +4,7 @@
 #include <X11/Xlib.h>
 #endif
 #include <qdebug.h>
-#include <qmessagebox.h>
+#include <QMessageBox>
 
 
 
@@ -15,6 +15,16 @@ ScreenRecorder::ScreenRecorder() : pauseCapture(false), started(false), activeMe
     /*Funzione di FFMPEG per inizializzare libavdevice
     e registrare correttamente i device di input e output*/
     avdevice_register_all();
+#if WIN32
+    cropW = GetSystemMetrics(SM_CXSCREEN);
+    cropH = GetSystemMetrics(SM_CYSCREEN);
+#endif
+#if linux
+    Display* disp = XOpenDisplay(NULL);
+    Screen* scrn = DefaultScreenOfDisplay(disp);
+    cropH = scrn->height;
+    cropW = scrn->width;
+#endif
 }
 /*Costruttore con parametro stringa di destinazione*/
 ScreenRecorder::ScreenRecorder(std::string RecPath) : pauseCapture(false), started(false), activeMenu(true), pts(0) {
@@ -40,6 +50,16 @@ ScreenRecorder::ScreenRecorder(std::string RecPath) : pauseCapture(false), start
 /*Costruttore di copia*/
 ScreenRecorder::ScreenRecorder(const ScreenRecorder& p1) : pauseCapture(p1.pauseCapture), started(p1.started), activeMenu(p1.activeMenu)
 {
+#if WIN32
+    cropW = GetSystemMetrics(SM_CXSCREEN);
+    cropH = GetSystemMetrics(SM_CYSCREEN);
+#endif
+#if linux
+    Display* disp = XOpenDisplay(NULL);
+    Screen* scrn = DefaultScreenOfDisplay(disp);
+    cropH = scrn->height;
+    cropW = scrn->width;
+#endif
 }
 
 /*Distruttore*/
@@ -799,6 +819,7 @@ int ScreenRecorder::CaptureVideoFrames() {
 
     /*Funzionamento analogo a quello dell'audio*/
     while (!ShouldStopVideo()) {
+
         if (pauseCapture) {
             outFile << "///////////////////   Pause  ///////////////////" << endl;
             avformat_close_input(&pAVFormatContext);
@@ -891,23 +912,7 @@ int ScreenRecorder::CaptureVideoFrames() {
                     outFile << "outPacket->duration: " << outPacket->duration << ", " << "pAVPacket->duration: " << pAVPacket->duration << endl;
                     outFile << "outPacket->pts: " << outPacket->pts << ", " << "pAVPacket->pts: " << pAVPacket->pts << endl;
                     outFile << "outPacket.dts: " << outPacket->dts << ", " << "pAVPacket->dts: " << pAVPacket->dts << endl;
-                    /*time_t timer;
-                    double seconds;
 
-                    ul.lock();
-                    if (!activeMenu) {
-                        time(&timer);
-                        seconds = difftime(timer, startTime);
-                        int h = (int)(seconds / 3600);
-                        int m = (int)(seconds / 60) % 60;
-                        int s = (int)(seconds) % 60;
-
-                        std::cout << std::flush << "\r" << std::setw(2) << std::setfill('0') << h << ':'
-                            << std::setw(2) << std::setfill('0') << m << ':'
-                            << std::setw(2) << std::setfill('0') << s << std::flush;
-                    }
-                    ul.unlock();
-                    */
                     
                     /*Acquisisco write lock per scrivere il frame video sul file*/
                     unique_lock<mutex> ulw(write_lock);
@@ -1053,7 +1058,6 @@ void ScreenRecorder::CloseRecorder()
         SetError( "Error: unable to free AudioFormatContext");
         exit(-1);
     }
-    //avformat_free_context(outAVFormatContext);
 
 
     avformat_close_input(&pAVFormatContext);
@@ -1063,7 +1067,6 @@ void ScreenRecorder::CloseRecorder()
     else {
         SetError( "Error: unable to close the file");
         exit(-1);
-        //throw "Error: unable to close the file";
     }
 
     avformat_free_context(pAVFormatContext);
@@ -1104,7 +1107,6 @@ bool ScreenRecorder::ShouldStopAudio()
 /*Funzione per impostare lo stop dell'audio in accesso esclusivo*/
 void ScreenRecorder::StopAudio()
 {
-    qInfo() << "Chiamo stop";
     std::unique_lock lk(stop_lockA);
     stopCaptureAudio = true;
 }
@@ -1120,7 +1122,6 @@ bool ScreenRecorder::ShouldStopVideo()
 /*Funzione per impostare lo stop del video in accesso esclusivo*/
 void ScreenRecorder::StopVideo()
 {
-    qInfo() << "Chiamo stop";
     std::unique_lock lk(stop_lockV);
     stopCaptureVideo = true;
 }

@@ -100,7 +100,6 @@ private:
 	const char* output_file;
 	
 	double video_pts;
-	int maxFrameNumber = 500000000000000;
 
 	int out_size;
 	int codec_id;
@@ -122,7 +121,6 @@ private:
 	bool closedAudioRecording = false;
 	bool closedVideoRecording = false;
 	int width, height;
-	int w, h;
 	int64_t pts = 0;
 	
 #if linux
@@ -181,8 +179,6 @@ public:
 #if WIN32
 	void SetCaptureSystemKey(int valueToSet, LPCWSTR keyToSet);
 	std::string RecordingPath = "..\\media\\output.mp4";
-#elif
-	std::string RecordingPath = "../media//output.mp4";
 #endif
 };
 

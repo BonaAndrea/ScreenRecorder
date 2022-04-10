@@ -34,7 +34,7 @@ QtWidgetsClass::QtWidgetsClass(QWidget* parent)
 {
 	setupUi(this);
 	setWindowIcon(QIcon(":/buttons/unicorn.png"));
-	sc = new ScreenRecorder();
+	sc = new ScreenRecorder;
 	QTimer* timer = new QTimer(this);
 #if linux
         char result[PATH_MAX];
